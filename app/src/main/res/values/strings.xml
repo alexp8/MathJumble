@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">MathJumble</string>
+    <string name="play_string">Play</string>
+    <string name="scores_string">Scores</string>
+    <string name="score_string">Score</string>
+    <string name="timer_string">Time</string>
+    <string name="Easy">Easy</string>
+    <string name="Normal">Normal</string>
+    <string name="Hard">Hard</string>
+    <string name="Close">X</string>
+</resources>
