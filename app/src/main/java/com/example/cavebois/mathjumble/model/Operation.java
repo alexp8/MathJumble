@@ -14,7 +14,9 @@ public interface Operation {
 
     int getAnswer();
 
-    void increaseRange(int inc);
+    void increaseRange();
 
     int getScoreBonus();
+
+    void calculateVariables(int[] vars);
 }

@@ -1,8 +1,5 @@
 package com.example.cavebois.mathjumble.model;
 
-import android.widget.Button;
-
-import java.util.Observable;
 import java.util.Random;
 import java.util.jar.Pack200;
 
@@ -12,9 +9,15 @@ import static com.example.cavebois.mathjumble.R.id.a_textview;
  * Created by Alex Peterson on 3/17/2017.
  */
 public class MathJumble {
+    /**Different difficulty increases dependent on game difficulty. */
+    private static final int EASY_DIFFICULTY_INCREASE = 2, NORMAL_DIFFICULTY_INCREASE = 3,
+                            HARD_DIFFICULTY_INCREASE = 5;
+
+    /**Amount of bonus time given upon correct answer.*/
+    private static final int EASY_TIMER_INCREASE = 3500, NORMAL_TIMER_INCREASE = 2500, HARD_TIMER_INCREASE = 1500;
 
     private Random rand = new Random();
-    private int unknown_index = 0, my_score = 0, my_cur_max_increase, my_timer_increase;
+    private int unknown_index = 0, my_score = 0, my_timer_increase;
     private Operation my_operation;
     private AbstractOperation my_add, my_subtract, my_multiply, my_divide;
 
@@ -23,23 +26,20 @@ public class MathJumble {
      * @param the_difficulty the difficulty setting as string
      */
     public MathJumble(final String the_difficulty) {
-        int add_max = 15, div_max = 5;
-        if (the_difficulty.equals("Easy")) {
-            my_cur_max_increase = 2;
-            add_max = 15;
-            my_timer_increase = 3000;
-        } else if (the_difficulty.equals("Normal")) {
-            my_cur_max_increase = 3;
-            add_max = 30;
-            my_timer_increase = 2000;
-        } else {
-            my_cur_max_increase = 5;
-            add_max = 50;
-            my_timer_increase = 1000;
+
+        switch (the_difficulty) {
+            case "Easy":
+                my_timer_increase = EASY_TIMER_INCREASE;
+            case "Normal":
+                my_timer_increase = NORMAL_TIMER_INCREASE;
+            default:
+                my_timer_increase = HARD_TIMER_INCREASE;
         }
 
-        my_add = new Add(add_max);
-        my_divide = new Divide(div_max);
+        my_add = new Add();
+        my_divide = new Divide();
+        my_multiply = new Multiply();
+        my_subtract = new Subtract();
     }
 
     /**
@@ -48,16 +48,16 @@ public class MathJumble {
      */
     public int[][] nextProblem() {
 
-        int rand_operation = rand.nextInt(4);
-
-        if (rand_operation == 0 || rand_operation > 1 ) { //add
-            my_operation = my_add;
-        } else if (rand_operation == 1) { //divide
-            my_operation = my_divide;
-        } else if (true) { //multiply
-
-        } else { //divide
-
+        final int rand_operation = rand.nextInt(4);
+        switch (rand_operation) {
+            case 0:
+                my_operation = my_add;
+            case 1:
+                my_operation = my_divide;
+            case 2:
+                my_operation = my_subtract;
+            default:
+                my_operation = my_multiply;
         }
 
         return my_operation.operate();
@@ -71,7 +71,7 @@ public class MathJumble {
         if (my_operation.getAnswer() == the_answer) {
             my_score += my_operation.getScoreBonus();
             //increase game difficulty creating bigger numbers
-            my_operation.increaseRange(my_cur_max_increase);
+            my_operation.increaseRange();
             return true;
         } else {
             return false;
