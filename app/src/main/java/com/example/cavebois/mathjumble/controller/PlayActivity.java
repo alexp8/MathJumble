@@ -1,12 +1,16 @@
 package com.example.cavebois.mathjumble.controller;
 
+import android.content.Intent;
 import android.os.CountDownTimer;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Layout;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.example.cavebois.mathjumble.R;
@@ -30,7 +34,11 @@ public class PlayActivity extends AppCompatActivity {
 
     private Button[] answer_buttons = new Button[3];
     private TextView[] variable_texts = new TextView[3];
-    private TextView my_operation_textview, my_score_textview, timer_textview;
+    private TextView my_operation_textview, my_score_textview, timer_textview,
+            my_game_over_textview, my_game_over_score_textview;
+
+    private Button my_menu_button, my_play_again_button;
+    private RelativeLayout my_game_over_layout;
     private int a = 0, b = 0, c = 0, answer = 0;
     private CountDownTimer my_timer;
 
@@ -43,6 +51,25 @@ public class PlayActivity extends AppCompatActivity {
 
         final String difficulty = getIntent().getStringExtra("Difficulty");
         my_jumble = new MathJumble(difficulty);
+
+        my_game_over_layout = (RelativeLayout) findViewById(R.id.game_over_layout);
+
+        my_game_over_textview = (TextView) findViewById(R.id.game_over_textview);
+        my_game_over_score_textview = (TextView) findViewById(R.id.game_over_score_textview);
+        my_menu_button = (Button) findViewById(R.id.menu_button);
+        my_menu_button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                final Intent menu = new Intent(getApplicationContext(), MainActivity.class);
+                startActivity(menu);
+                finish();
+            }
+        });
+        my_play_again_button = (Button) findViewById(R.id.play_again_button);
+        my_play_again_button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+
+            }
+        });
 
         //create textviews
         variable_texts[0] = (TextView) findViewById(R.id.a_textview);
@@ -120,6 +147,7 @@ public class PlayActivity extends AppCompatActivity {
             my_time += my_jumble.getTimerIncrease();
             timer_textview.setText(String.valueOf(my_time / 1000));
             my_score_textview.setText(String.valueOf(my_jumble.getScore()));
+
         }
         else lose();
 
@@ -128,6 +156,8 @@ public class PlayActivity extends AppCompatActivity {
     private void lose() {
         my_timer.cancel();
         my_jumble.lose();
+
+        my_game_over_score_textview.setText(String.valueOf(my_jumble.getScore()));
         for (Button button : answer_buttons) {
             button.setEnabled(false);
             button.setAlpha((float) 0.5);
@@ -135,8 +165,13 @@ public class PlayActivity extends AppCompatActivity {
         for (TextView tv : variable_texts) {
             tv.setAlpha((float) 0.5);
         }
+        my_score_textview.setAlpha((float) 0.5);
+        timer_textview.setAlpha((float) 0.5);
+        my_operation_textview.setAlpha((float) 0.5);
+        my_score_textview.setAlpha((float) 0.5);
+        findViewById(R.id.timer_textview_label).setAlpha((float) 0.5);
+        findViewById(R.id.score_textview_label).setAlpha((float) 0.5);
 
-
-
+        my_game_over_layout.setVisibility(View.VISIBLE);
     }
 }

@@ -176,4 +176,55 @@
              />
     </LinearLayout>
 
+    <RelativeLayout
+        android:id="@+id/game_over_layout"
+        android:visibility="invisible"
+        android:orientation="vertical"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="120dp"
+        android:layout_width="300dp"
+        android:layout_height="375dp"
+        android:background="@drawable/game_over_rect">
+
+        <TextView
+            android:id="@+id/game_over_textview"
+            android:textSize="45sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="50dp"
+            android:layout_centerHorizontal="true"
+            android:text="@string/game_over_string"/>
+
+        <TextView
+            android:id="@+id/game_over_score_textview"
+            android:textSize="35sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/game_over_textview"
+            android:layout_margin="15dp"
+            android:text="@string/score_string"/>
+
+        <Button
+            android:id="@+id/play_again_button"
+            android:background="@drawable/my_game_over_buttons_bg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/game_over_score_textview"
+            android:layout_margin="15dp"
+            android:text="@string/play_again_string"/>
+
+        <Button
+            android:id="@+id/menu_button"
+            android:background="@drawable/my_game_over_buttons_bg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:text="@string/menu_string"
+            android:layout_below="@id/play_again_button"
+            android:layout_margin="15dp"/>
+
+    </RelativeLayout>
+
 </RelativeLayout>

@@ -8,4 +8,7 @@
     <string name="Normal">Normal</string>
     <string name="Hard">Hard</string>
     <string name="Close">X</string>
+    <string name="game_over_string">Game Over</string>
+    <string name="play_again_string">Play Again</string>
+    <string name="menu_string">Main Menu</string>
 </resources>
