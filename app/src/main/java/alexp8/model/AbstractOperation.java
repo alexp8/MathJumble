@@ -1,6 +1,8 @@
-package com.example.cavebois.mathjumble.model;
+package alexp8.model;
 
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 
 /**
  * Created by Alex Peterson on 3/23/2017.
@@ -12,6 +14,8 @@ public abstract class AbstractOperation implements Operation {
             my_max_increase, my_min_increase;
     protected Random my_rand;
     private String my_label;
+    private int[] my_variables;
+    private Set<Integer> my_answers;
 
     /**
      *
@@ -30,6 +34,8 @@ public abstract class AbstractOperation implements Operation {
         my_label = the_label;
         my_max_increase = the_max_increase;
         my_min_increase = the_min_increase;
+        my_variables = new int[3];
+        my_answers = new HashSet<Integer>();
     }
 
     public int getUnknownIndex() {
@@ -54,41 +60,31 @@ public abstract class AbstractOperation implements Operation {
 
     public String toString() {return my_label;}
 
-    public int[][] operate() {
-        final int[][] problem = new int[3][3];
+    /**
+     *
+     */
+    public void operate() {
+        my_answers.clear();
         my_unknown_index = my_rand.nextInt(2); //a, b, or c to randomly chosen as unknown variable
 
         //calculate the three random variables, as well as the correct answer for missing variable
-        calculateVariables(problem[0]);
+        calculateVariables(my_variables);
+        my_answer = my_variables[my_unknown_index];
 
-        //calculates 2 fake answers (fake answers are close to real answer)
-
-        my_answer = problem[0][my_unknown_index];
-        final int[] answers = calculateFakeAnswers(my_answer);
-        answers[2] = my_answer;
-
-        //Shuffle the possible answers in random order
-        for (int i = 0; i < 3; i++) {
-            int index = my_rand.nextInt(problem[1].length);
-            while (problem[1][index] != 0) {//randomly choose an index not yet chosen
-                index = my_rand.nextInt(problem[1].length);
-            }
-            problem[1][index] = answers[i];
-        }
-
-        return problem;
+        //calculates 2 fake answers (fake answers are close to real answers
+        calculateFakeAnswers();
+        my_answers.add(my_answer);
     }
 
     /**
      *
      * @return an array of 2 "random" numbers with each number being close to the real answer of the current problem
      */
-    private int[] calculateFakeAnswers(final int real_answer) {
-        final int[] fake_answers = new int[3];
-
+    private void calculateFakeAnswers() {
         for (int i = 0; i < 2; i++) {
             int fake_answer = 0;
             do {
+                //calculate how close the fake answer will be to the real one
                 int rand_difference = my_rand.nextInt(my_rand.nextInt(5) + 1) + 1;
 
                 int plus_or_minus = my_rand.nextInt(2); //fake answer less than or greater than real answer
@@ -96,11 +92,12 @@ public abstract class AbstractOperation implements Operation {
                     fake_answer = my_answer - rand_difference;
                 else
                     fake_answer = my_answer + rand_difference;
-            } while (fake_answer == fake_answers[0] || fake_answer == real_answer);
+            } while (my_answers.contains(fake_answer) || fake_answer == my_answer);
 
-            fake_answers[i] = fake_answer;
+            my_answers.add(fake_answer);
         }
-
-        return fake_answers;
     }
+
+    public int[] getVariables() {return my_variables;}
+    public Set<Integer> getAnswers() {return my_answers;}
 }

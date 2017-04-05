@@ -1,25 +1,20 @@
-package com.example.cavebois.mathjumble.controller;
+package alexp8.controller;
 
 import android.content.Intent;
 import android.os.CountDownTimer;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.Layout;
-import android.util.DisplayMetrics;
-import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.example.cavebois.mathjumble.R;
-import com.example.cavebois.mathjumble.model.MathJumble;
+import com.example.alexp8.mathjumble.R;
+import alexp8.model.MathJumble;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
+import java.util.Iterator;
 import java.util.Random;
-import java.util.Timer;
+import java.util.Set;
 
 /**
  * Play the game.
@@ -117,21 +112,25 @@ public class PlayActivity extends AppCompatActivity {
     }
 
     /**
-     * Create the next problem to be solved.
+     * Create the next problem to be solved and display it on the screen.
      */
     private void nextProblem() {
-        final int[][] answers = my_jumble.nextProblem();
+        my_jumble.nextProblem();
+        final int[] variables = my_jumble.getVariables();
+        final Set<Integer> answers = my_jumble.getAnswers();
 
         final int unknown_index = my_jumble.getUnknownIndex();
 
         my_operation_textview.setText(my_jumble.getOperationText());
+
+        final Iterator iterator = answers.iterator();
         //update the text values on the buttons and text fields
-        for (int i = 0; i < answers[0].length; i++) {
+        for (int i = 0; i < 3; i++) {
             if (i != unknown_index)
-                variable_texts[i].setText(String.valueOf(answers[0][i]));
+                variable_texts[i].setText(String.valueOf(variables[i]));
             else
-                variable_texts[i].setText("?");
-            answer_buttons[i].setText(String.valueOf(answers[1][i]));
+                variable_texts[i].setText(String.valueOf("?"));
+            answer_buttons[i].setText(String.valueOf(iterator.next().toString()));
         }
     }
 

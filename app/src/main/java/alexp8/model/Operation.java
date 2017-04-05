@@ -1,4 +1,6 @@
-package com.example.cavebois.mathjumble.model;
+package alexp8.model;
+
+import java.util.Set;
 
 /**
  * Created by Alex Peterson on 3/23/2017.
@@ -6,7 +8,7 @@ package com.example.cavebois.mathjumble.model;
 
 public interface Operation {
 
-    int[][] operate();
+    void operate();
 
     int getUnknownIndex();
 
@@ -18,5 +20,9 @@ public interface Operation {
 
     int getScoreBonus();
 
-    void calculateVariables(int[] vars);
+    void calculateVariables(int[] variables);
+
+    Set<Integer> getAnswers();
+
+    int[] getVariables();
 }

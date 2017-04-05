@@ -1,4 +1,4 @@
-package com.example.cavebois.mathjumble.model;
+package alexp8.model;
 
 /**
  * Created by Cave Bois on 3/29/2017.

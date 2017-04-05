@@ -1,9 +1,7 @@
-package com.example.cavebois.mathjumble.model;
+package alexp8.model;
 
 import java.util.Random;
-import java.util.jar.Pack200;
-
-import static com.example.cavebois.mathjumble.R.id.a_textview;
+import java.util.Set;
 
 /**
  * Created by Alex Peterson on 3/17/2017.
@@ -20,12 +18,16 @@ public class MathJumble {
     private int unknown_index = 0, my_score = 0, my_timer_increase;
     private Operation my_operation;
     private AbstractOperation my_add, my_subtract, my_multiply, my_divide;
+    private int[] my_variables, my_answers;
 
     /**
      *
      * @param the_difficulty the difficulty setting as string
      */
     public MathJumble(final String the_difficulty) {
+
+        my_variables = new int[3];
+        my_answers = new int[3];
 
         switch (the_difficulty) {
             case "Easy":
@@ -46,7 +48,7 @@ public class MathJumble {
      * Generates 3 new variables as well as 3 possible answers for the missing variable.
      * @return a 2D array, first row is the variables, second row the possible answers
      */
-    public int[][] nextProblem() {
+    public void nextProblem() {
 
         final int rand_operation = rand.nextInt(4);
         switch (rand_operation) {
@@ -59,8 +61,7 @@ public class MathJumble {
             default:
                 my_operation = my_multiply;
         }
-
-        return my_operation.operate();
+        my_operation.operate();
     }
 
     public void lose() {
@@ -91,4 +92,8 @@ public class MathJumble {
     }
 
     public int getTimerIncrease() {return my_timer_increase;}
+
+    public int[] getVariables() {return my_operation.getVariables();}
+
+    public Set<Integer> getAnswers() {return my_operation.getAnswers();}
 }

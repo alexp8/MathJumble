@@ -1,4 +1,4 @@
-package com.example.cavebois.mathjumble.controller;
+package alexp8.controller;
 
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
@@ -6,8 +6,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
-import com.example.cavebois.mathjumble.R;
-import com.example.cavebois.mathjumble.model.MathJumble;
+import com.example.alexp8.mathjumble.R;
 
 public class DifficultyActivity extends AppCompatActivity {
 
