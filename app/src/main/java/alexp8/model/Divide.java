@@ -12,7 +12,7 @@ public class Divide extends AbstractOperation {
     private static final int MIN_INCREASE = 1, MAX_INCREASE = 2;
 
     /** */
-    private static final int SCORE_BONUS = 10;
+    private static final int SCORE_BONUS = 100;
     private static final String LABEL = "÷";
 
     public Divide() {super(START_MIN, START_MAX, MIN_INCREASE, MAX_INCREASE, SCORE_BONUS, LABEL);}

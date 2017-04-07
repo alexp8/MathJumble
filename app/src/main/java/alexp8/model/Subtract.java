@@ -12,7 +12,7 @@ public class Subtract extends AbstractOperation {
     private static final int MIN_INCREASE = 3, MAX_INCREASE = 5;
 
     /** */
-    private static final int SCORE_BONUS = 5;
+    private static final int SCORE_BONUS = 50;
     private static final String LABEL = "-";
 
     public Subtract() {super(START_MIN, START_MAX, MIN_INCREASE, MAX_INCREASE, SCORE_BONUS, LABEL);}

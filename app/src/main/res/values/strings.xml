@@ -11,4 +11,9 @@
     <string name="game_over_string">Game Over</string>
     <string name="play_again_string">Play Again</string>
     <string name="menu_string">Main Menu</string>
+    <string name="easy_string">Easy</string>
+    <string name="normal_string">Normal</string>
+    <string name="hard_string">Hard</string>
+
+    <string name="how_to_play_string">How To Play</string>
 </resources>

@@ -11,7 +11,7 @@ public class Multiply extends AbstractOperation {
     /** */
     private static final int MIN_INCREASE = 1, MAX_INCREASE = 2;
 
-    private static final int SCORE_BONUS = 5;
+    private static final int SCORE_BONUS = 75;
     private static final String LABEL = "*";
 
     public Multiply() {super(START_MIN, START_MAX, MIN_INCREASE, MAX_INCREASE, SCORE_BONUS, LABEL);}

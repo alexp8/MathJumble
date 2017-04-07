@@ -12,7 +12,7 @@ public class Add extends AbstractOperation {
     private static final int MIN_INCREASE = 3, MAX_INCREASE = 5;
 
     /** */
-    private static final int SCORE_BONUS = 5;
+    private static final int SCORE_BONUS = 50;
     private static final String LABEL = "+";
     /**
      *

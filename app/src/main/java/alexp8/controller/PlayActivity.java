@@ -36,6 +36,7 @@ public class PlayActivity extends AppCompatActivity {
     private RelativeLayout my_game_over_layout;
     private int a = 0, b = 0, c = 0, answer = 0;
     private CountDownTimer my_timer;
+    private String my_difficulty;
 
     private MathJumble my_jumble;
 
@@ -44,9 +45,36 @@ public class PlayActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play);
 
-        final String difficulty = getIntent().getStringExtra("Difficulty");
-        my_jumble = new MathJumble(difficulty);
+        my_difficulty = getIntent().getStringExtra("Difficulty");
+        my_jumble = new MathJumble(my_difficulty);
 
+        //set up buttons
+        setupButtons();
+
+        //start game timer
+        startTimer();
+
+        //begin the game
+        nextProblem();
+    }
+
+    private void startTimer() {
+        my_timer = new CountDownTimer(START_TIME, ONE_SECOND) {
+            public void onTick(long milliSeconds) {
+                my_time -= 1000;
+                timer_textview.setText(String.valueOf(my_time / 1000));
+            }
+            public void onFinish() {
+                timer_textview.setText(String.valueOf(0));
+                lose();
+            }
+        }.start();
+    }
+
+    /**
+     * Create texts and button on screen.
+     */
+    private void setupButtons() {
         my_game_over_layout = (RelativeLayout) findViewById(R.id.game_over_layout);
 
         my_game_over_textview = (TextView) findViewById(R.id.game_over_textview);
@@ -62,7 +90,12 @@ public class PlayActivity extends AppCompatActivity {
         my_play_again_button = (Button) findViewById(R.id.play_again_button);
         my_play_again_button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-
+                my_jumble = new MathJumble(my_difficulty);
+                my_game_over_layout.setVisibility(View.INVISIBLE);
+                flipActiveViews(1, true);
+                my_game_over_score_textview.setText(String.valueOf(my_jumble.getScore()));
+                startTimer();
+                nextProblem();
             }
         });
 
@@ -75,7 +108,6 @@ public class PlayActivity extends AppCompatActivity {
         my_score_textview = (TextView) findViewById(R.id.score_textview);
         my_score_textview.setText(String.valueOf(my_jumble.getScore()));
         my_operation_textview = (TextView) findViewById(R.id.operation_textview);
-        final TextView equals_textview = (TextView) findViewById(R.id.equals_textview);
 
         //create buttons
         answer_buttons[0] = (Button) findViewById(R.id.a1_button);
@@ -96,19 +128,6 @@ public class PlayActivity extends AppCompatActivity {
                 buttonClick((answer_buttons[2].getText().toString()));
             }
         });
-
-        my_timer = new CountDownTimer(START_TIME, ONE_SECOND) {
-            public void onTick(long milliSeconds) {
-                my_time -= 1000;
-                timer_textview.setText(String.valueOf(my_time / 1000));
-            }
-            public void onFinish() {
-                timer_textview.setText(String.valueOf(0));
-                lose();
-            }
-        }.start();
-
-        nextProblem();
     }
 
     /**
@@ -152,24 +171,34 @@ public class PlayActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Swap views depending if game is ending or beginning a new game.
+     * @param value
+     * @param active
+     */
+    private void flipActiveViews(double value, boolean active) {
+        for (Button button : answer_buttons) {
+            button.setEnabled(active);
+            button.setAlpha((float) value);
+        }
+        for (TextView tv : variable_texts) {
+            tv.setAlpha((float) value);
+        }
+        my_score_textview.setAlpha((float) value);
+        timer_textview.setAlpha((float) value);
+        my_operation_textview.setAlpha((float) value);
+        my_score_textview.setAlpha((float) value);
+        findViewById(R.id.timer_textview_label).setAlpha((float) value);
+        findViewById(R.id.score_textview_label).setAlpha((float) value);
+    }
+
     private void lose() {
         my_timer.cancel();
         my_jumble.lose();
 
         my_game_over_score_textview.setText(String.valueOf(my_jumble.getScore()));
-        for (Button button : answer_buttons) {
-            button.setEnabled(false);
-            button.setAlpha((float) 0.5);
-        }
-        for (TextView tv : variable_texts) {
-            tv.setAlpha((float) 0.5);
-        }
-        my_score_textview.setAlpha((float) 0.5);
-        timer_textview.setAlpha((float) 0.5);
-        my_operation_textview.setAlpha((float) 0.5);
-        my_score_textview.setAlpha((float) 0.5);
-        findViewById(R.id.timer_textview_label).setAlpha((float) 0.5);
-        findViewById(R.id.score_textview_label).setAlpha((float) 0.5);
+
+        flipActiveViews(0.5, false);
 
         my_game_over_layout.setVisibility(View.VISIBLE);
     }
