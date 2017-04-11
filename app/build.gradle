@@ -28,3 +28,40 @@ dependencies {
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     testCompile 'junit:junit:4.12'
 }
+
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:2.1.0'
+    }
+}
+
+allprojects {
+    repositories {
+        jcenter()
+    }
+}
+
+// In your main app's Gradle config file:
+dependencies {
+    compile 'com.flurry.android:analytics:6.3.1'
+    /*
+     * Optional library to help monetizing your app with ads.
+     * If you include the ads library, you do not need to include
+     * the analytics library as it is a transitive dependency.
+     */
+    // compile 'com.flurry.android:ads:6.2.0'
+    //... other dependencies
+}
+
+dependencies {
+    compile 'com.android.support.constraint:constraint-layout:+'
+}
+dependencies {
+    compile project(':BaseGameUtils')
+    // ...
+}

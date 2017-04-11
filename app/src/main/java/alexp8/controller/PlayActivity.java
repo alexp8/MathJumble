@@ -24,7 +24,7 @@ public class PlayActivity extends AppCompatActivity {
     private static final long START_TIME = 30 * 1000;
     private static final int ONE_SECOND = 1000;
 
-    private long my_time = START_TIME;
+    private long my_time;
     private Random rand = new Random();
 
     private Button[] answer_buttons = new Button[3];
@@ -59,6 +59,7 @@ public class PlayActivity extends AppCompatActivity {
     }
 
     private void startTimer() {
+        my_time = START_TIME;
         my_timer = new CountDownTimer(START_TIME, ONE_SECOND) {
             public void onTick(long milliSeconds) {
                 my_time -= 1000;
@@ -92,10 +93,10 @@ public class PlayActivity extends AppCompatActivity {
             public void onClick(View v) {
                 my_jumble = new MathJumble(my_difficulty);
                 my_game_over_layout.setVisibility(View.INVISIBLE);
-                flipActiveViews(1, true);
+                flipActiveViews(1, true); //activate buttons and views
                 my_game_over_score_textview.setText(String.valueOf(my_jumble.getScore()));
-                startTimer();
-                nextProblem();
+                startTimer(); //reset and start timer
+                nextProblem(); //display next problem
             }
         });
 

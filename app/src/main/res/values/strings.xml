@@ -16,4 +16,7 @@
     <string name="hard_string">Hard</string>
 
     <string name="how_to_play_string">How To Play</string>
+    <string name="sign_out">Sign Out</string>
+    <string name="signin_other_error">Unable to sign in</string>
+    <string name="sign_in">Sign in</string>
 </resources>
