@@ -24,7 +24,6 @@ dependencies {
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    compile 'com.android.support:appcompat-v7:25.3.0'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     testCompile 'junit:junit:4.12'
 }
@@ -36,7 +35,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.1.0'
+        classpath 'com.android.tools.build:gradle:2.3.1'
     }
 }
 
@@ -59,9 +58,10 @@ dependencies {
 }
 
 dependencies {
-    compile 'com.android.support.constraint:constraint-layout:+'
-}
-dependencies {
     compile project(':BaseGameUtils')
-    // ...
+    compile 'com.google.android.gms:play-services:10.2.1'
+    compile 'com.github.bumptech.glide:glide:3.7.0'
 }
+
+
+apply plugin: 'com.google.gms.google-services'

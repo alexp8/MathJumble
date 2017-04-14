@@ -6,20 +6,18 @@ package alexp8.model;
 
 public class Add extends AbstractOperation {
     /**The starting range of number for adding and subtracting.*/
-    private static final int START_MAX = 15, START_MIN = 5;
+    private static final int START_MAX = 15, START_MIN = 5,
+    /**Range of numbers increase during game progression to increase difficulty.*/
+    MIN_INCREASE = 3, MAX_INCREASE = 5,
+    /**Score awarded on corrrect answer.*/
+    SCORE_BONUS = 50;
 
-    /** */
-    private static final int MIN_INCREASE = 3, MAX_INCREASE = 5;
-
-    /** */
-    private static final int SCORE_BONUS = 50;
     private static final String LABEL = "+";
+
     /**
      *
      */
-    public Add() {
-        super(START_MIN, START_MAX, MIN_INCREASE, MAX_INCREASE, SCORE_BONUS, LABEL);
-    }
+    public Add() {super(START_MIN, START_MAX, MIN_INCREASE, MAX_INCREASE, SCORE_BONUS, LABEL);}
 
     /**
      * Private helper method to calculate "random" variables and missing variable.

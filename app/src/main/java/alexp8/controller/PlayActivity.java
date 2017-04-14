@@ -8,8 +8,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.alexp8.mathjumble.R;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.games.Games;
+
 import alexp8.model.MathJumble;
 
 import java.util.Iterator;
@@ -20,8 +24,8 @@ import java.util.Set;
  * Play the game.
  */
 public class PlayActivity extends AppCompatActivity {
-    //time in milliseconds for game to be played
-    private static final long START_TIME = 30 * 1000;
+    //time in milliseconds for game to be played (15 seconds)
+    private static final long START_TIME = 15 * 1000;
     private static final int ONE_SECOND = 1000;
 
     private long my_time;
@@ -39,6 +43,7 @@ public class PlayActivity extends AppCompatActivity {
     private String my_difficulty;
 
     private MathJumble my_jumble;
+    private GoogleApiClient myGoogleApiClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +52,8 @@ public class PlayActivity extends AppCompatActivity {
 
         my_difficulty = getIntent().getStringExtra("Difficulty");
         my_jumble = new MathJumble(my_difficulty);
+
+        myGoogleApiClient = (GoogleApiClient) getIntent().getSerializableExtra("MyGoogleApiClient");
 
         //set up buttons
         setupButtons();
@@ -114,19 +121,19 @@ public class PlayActivity extends AppCompatActivity {
         answer_buttons[0] = (Button) findViewById(R.id.a1_button);
         answer_buttons[0].setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                buttonClick((answer_buttons[0].getText().toString()));
+                answerButtonClick((answer_buttons[0].getText().toString()));
             }
         });
         answer_buttons[1] = (Button) findViewById(R.id.a2_button);
         answer_buttons[1].setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                buttonClick((answer_buttons[1].getText().toString()));
+                answerButtonClick((answer_buttons[1].getText().toString()));
             }
         });
         answer_buttons[2] = (Button) findViewById(R.id.a3_button);
         answer_buttons[2].setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                buttonClick((answer_buttons[2].getText().toString()));
+                answerButtonClick((answer_buttons[2].getText().toString()));
             }
         });
     }
@@ -146,7 +153,7 @@ public class PlayActivity extends AppCompatActivity {
         final Iterator iterator = answers.iterator();
         //update the text values on the buttons and text fields
         for (int i = 0; i < 3; i++) {
-            if (i != unknown_index)
+            if (i != unknown_index) //don't show the answer
                 variable_texts[i].setText(String.valueOf(variables[i]));
             else
                 variable_texts[i].setText(String.valueOf("?"));
@@ -158,7 +165,7 @@ public class PlayActivity extends AppCompatActivity {
      *
      * @param the_answer
      */
-    private void buttonClick(final String the_answer) {
+    private void answerButtonClick(final String the_answer) {
         boolean correct = my_jumble.answer(Integer.valueOf(the_answer));
 
         if (correct) {
@@ -194,10 +201,19 @@ public class PlayActivity extends AppCompatActivity {
     }
 
     private void lose() {
+
+        try {
+            Games.Leaderboards.submitScore(myGoogleApiClient, my_jumble.getLeaderboardID(),  my_jumble.getScore());
+        } catch (IllegalArgumentException ex) {
+            Toast.makeText(getApplicationContext(),"Unable to submit score", Toast.LENGTH_LONG).show();
+        }
+
+
         my_timer.cancel();
         my_jumble.lose();
 
-        my_game_over_score_textview.setText(String.valueOf(my_jumble.getScore()));
+        final String score = "Score " + String.valueOf(my_jumble.getScore());
+        my_game_over_score_textview.setText(score);
 
         flipActiveViews(0.5, false);
 

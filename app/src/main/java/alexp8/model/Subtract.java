@@ -24,7 +24,7 @@ public class Subtract extends AbstractOperation {
     @Override
     public void calculateVariables(final int[] the_variables) {
         the_variables[0] = my_rand.nextInt(cur_max) + cur_min; //a = {cur_min, cur_min + cur_max - 1}
-        the_variables[1] = my_rand.nextInt(the_variables[0] - cur_min) + cur_min; //b = {a - cur_min, cur_min + a - 1}
+        the_variables[1] = my_rand.nextInt(the_variables[0] - cur_min + 1) + cur_min; //b = {a - cur_min, cur_min + a - 1}
         the_variables[2] = the_variables[0] - the_variables[1];
     }
 }

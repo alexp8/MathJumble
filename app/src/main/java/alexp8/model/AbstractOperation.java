@@ -10,7 +10,7 @@ import java.util.Set;
 
 public abstract class AbstractOperation implements Operation {
 
-    protected int my_answer, cur_max, cur_min, my_unknown_index, my_score_bonus,
+    protected int my_answer = 0, cur_max, cur_min, my_unknown_index = 0, my_score_bonus,
             my_max_increase, my_min_increase;
     protected Random my_rand;
     private String my_label;
@@ -25,40 +25,41 @@ public abstract class AbstractOperation implements Operation {
     public AbstractOperation(final int the_start_min, final int the_start_max, final int the_min_increase,
                              final int the_max_increase, final int the_score_bonus,
                              final String the_label) {
-        my_answer = 0;
-        my_rand = new Random();
+
         cur_min = the_start_min;
         cur_max = the_start_max;
-        my_unknown_index = 0;
         my_score_bonus = the_score_bonus;
         my_label = the_label;
         my_max_increase = the_max_increase;
         my_min_increase = the_min_increase;
+
         my_variables = new int[3];
+        my_rand = new Random();
         my_answers = new HashSet<Integer>();
     }
 
-    public int getUnknownIndex() {
-        return my_unknown_index;
-    }
-
+    /**Getters for data MathJumble will need.*/
+    public int getUnknownIndex() {return my_unknown_index;}
     public int getAnswer() {return my_answer;}
+    public int getScoreBonus() {return my_score_bonus;}
+    public String toString() {return my_label;}
+    public int[] getVariables() {return my_variables;}
+    public Set<Integer> getAnswers() {return my_answers;}
 
+    /**
+     * Increase range of numbers that can be chosen.
+     */
     public void increaseRange() {
         cur_max += my_max_increase;
         cur_min += my_min_increase;
     }
 
     /**
-     * Abstract method to be overriden by child classes.
+     * Abstract method to be overridden by child classes.
      * @param vars fill an array with 3 numbers for the problem
      * @return the answer to the created problem
      */
     public abstract void calculateVariables(int[] vars);
-
-    public int getScoreBonus() {return my_score_bonus;}
-
-    public String toString() {return my_label;}
 
     /**
      *
@@ -97,7 +98,4 @@ public abstract class AbstractOperation implements Operation {
             my_answers.add(fake_answer);
         }
     }
-
-    public int[] getVariables() {return my_variables;}
-    public Set<Integer> getAnswers() {return my_answers;}
 }

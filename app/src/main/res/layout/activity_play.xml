@@ -4,64 +4,49 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <LinearLayout
-        android:id="@+id/linearLayoutTop"
+    <!-- Timer textview label -->
+    <TextView
+        android:id="@+id/timer_textview_label"
+        android:textSize="18sp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_alignParentTop="true">
+        android:layout_marginStart="12dp"
+        android:layout_marginLeft="12dp"
+        android:layout_marginTop="20dp"
+        android:text="@string/timer_string"/>
 
-        <LinearLayout
-            android:id="@+id/linearLayoutTopLeft"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+    <!-- Timer textview  -->
+    <TextView
+        android:id="@+id/timer_textview"
+        android:textSize="35sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="20dp"/>
 
-            <TextView
-                android:id="@+id/timer_textview_label"
-                android:textSize="18sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_marginLeft="12dp"
-                android:layout_marginTop="20dp"
-                android:text="@string/timer_string"/>
+    <!-- Score label -->
+    <TextView
+        android:id="@+id/score_textview_label"
+        android:textSize="18sp"
+        android:layout_marginTop="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/score_string"
+        android:layout_marginLeft="270dp"
+        android:layout_marginStart="270dp"
+        android:layout_toRightOf="@id/timer_textview_label"
+        android:layout_toEndOf="@id/timer_textview_label"/>
 
-            <TextView
-                android:id="@+id/timer_textview"
-                android:textSize="35sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
-                android:layout_marginLeft="20dp"
-                android:layout_marginTop="20dp"/>
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/linearLayoutTopRight"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginStart="225dp"
-            android:layout_marginLeft="225dp"
-            android:layout_marginTop="20dp">
-
-            <TextView
-                android:id="@+id/score_textview_label"
-                android:layout_marginTop="5dp"
-                android:textSize="18sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/score_string"/>
-
-            <TextView
-                android:id="@+id/score_textview"
-                android:textSize="35sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"/>
-        </LinearLayout>
-    </LinearLayout>
+    <!-- Score -->
+    <TextView
+        android:id="@+id/score_textview"
+        android:textSize="35sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/score_textview_label"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
 
     <LinearLayout
         android:id="@+id/answerTextViewsLayout"
@@ -74,6 +59,7 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true">
 
+        <!-- Left variable tv -->
         <TextView
             android:id="@+id/a_textview"
             android:gravity="center"
@@ -82,9 +68,10 @@
             android:layout_weight="1"
             android:layout_marginLeft="10dp"
             android:layout_marginStart="10dp"
-            android:background="@drawable/my_variable_textviews_bg"
+            android:background="@drawable/light_blue_bg"
             android:textSize="30sp"/>
 
+        <!-- operation tv -->
         <TextView
             android:id="@+id/operation_textview"
             android:gravity="center"
@@ -95,10 +82,11 @@
             android:textSize="30sp"
             android:text=""/>
 
+        <!-- Center variable tv -->
         <TextView
             android:id="@+id/b_textview"
             android:gravity="center"
-            android:background="@drawable/my_variable_textviews_bg"
+            android:background="@drawable/light_blue_bg"
             android:textSize="30sp"
             android:layout_weight="1"
             android:layout_marginStart="10dp"
@@ -106,6 +94,7 @@
             android:layout_width="wrap_content"
             android:layout_height="90dp"/>
 
+        <!-- Equals tv -->
         <TextView
             android:id="@+id/equals_textview"
             android:gravity="center"
@@ -116,10 +105,11 @@
             android:layout_height="30dp"
             android:text="="/>
 
+        <!-- Right variable tv -->
         <TextView
             android:id="@+id/c_textview"
             android:gravity="center"
-            android:background="@drawable/my_variable_textviews_bg"
+            android:background="@drawable/light_blue_bg"
             android:textSize="30sp"
             android:layout_marginStart="10dp"
             android:layout_marginLeft="10dp"
@@ -142,9 +132,10 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true">
 
+        <!-- Left answer button -->
         <Button
             android:id="@+id/a1_button"
-            android:background="@drawable/my_answer_buttons_bg"
+            android:background="@drawable/light_orange_bg"
             android:textSize="30sp"
             android:layout_marginStart="30dp"
             android:layout_marginLeft="30dp"
@@ -152,9 +143,10 @@
             android:layout_weight="1"
             android:layout_height="90dp"/>
 
+        <!-- Center answer button -->
         <Button
             android:id="@+id/a2_button"
-            android:background="@drawable/my_answer_buttons_bg"
+            android:background="@drawable/light_orange_bg"
             android:textSize="30sp"
             android:layout_marginStart="30dp"
             android:layout_marginLeft="30dp"
@@ -162,9 +154,10 @@
             android:layout_weight="1"
             android:layout_height="90dp"/>
 
+        <!-- Right answer button -->
         <Button
             android:id="@+id/a3_button"
-            android:background="@drawable/my_answer_buttons_bg"
+            android:background="@drawable/light_orange_bg"
             android:textSize="30sp"
             android:layout_marginStart="30dp"
             android:layout_marginLeft="30dp"
@@ -176,6 +169,7 @@
              />
     </LinearLayout>
 
+    <!-- Layout to show upon game over -->
     <RelativeLayout
         android:id="@+id/game_over_layout"
         android:visibility="invisible"
@@ -184,8 +178,9 @@
         android:layout_marginTop="120dp"
         android:layout_width="300dp"
         android:layout_height="375dp"
-        android:background="@drawable/game_over_rect">
+        android:background="@drawable/light_red_bg">
 
+        <!-- Game over label -->
         <TextView
             android:id="@+id/game_over_textview"
             android:textSize="45sp"
@@ -195,6 +190,7 @@
             android:layout_centerHorizontal="true"
             android:text="@string/game_over_string"/>
 
+        <!-- Score -->
         <TextView
             android:id="@+id/game_over_score_textview"
             android:textSize="35sp"
@@ -205,9 +201,10 @@
             android:layout_margin="15dp"
             android:text="@string/score_string"/>
 
+        <!-- Play again button -->
         <Button
             android:id="@+id/play_again_button"
-            android:background="@drawable/my_game_over_buttons_bg"
+            android:background="@drawable/light_green_bg"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
@@ -215,9 +212,10 @@
             android:layout_margin="15dp"
             android:text="@string/play_again_string"/>
 
+        <!-- Main menu button -->
         <Button
             android:id="@+id/menu_button"
-            android:background="@drawable/my_game_over_buttons_bg"
+            android:background="@drawable/light_green_bg"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
@@ -226,5 +224,4 @@
             android:layout_margin="15dp"/>
 
     </RelativeLayout>
-
 </RelativeLayout>
