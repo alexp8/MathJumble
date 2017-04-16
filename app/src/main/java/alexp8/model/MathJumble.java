@@ -29,12 +29,8 @@ public class MathJumble {
 
     /**
      *
-     * @param the_difficulty the difficulty setting as string
      */
-    public MathJumble(final String the_difficulty) {
-
-        my_variables = new int[3];
-        my_answers = new int[3];
+    public MathJumble(String the_difficulty) {
 
         switch (the_difficulty) {
             case "Easy":
@@ -52,6 +48,9 @@ public class MathJumble {
             default:
                 break;
         }
+
+        my_variables = new int[3];
+        my_answers = new int[3];
 
         my_add = new Add();
         my_divide = new Divide();

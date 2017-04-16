@@ -16,15 +16,12 @@
         android:value="@string/app_id"/>
         <activity
             android:name="alexp8.controller.MainActivity"
-            android:label="MathJumble"
-            android:theme="@style/AppTheme">
+            android:label="MathJumble">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="alexp8.controller.PlayActivity" />
     </application>
 
 </manifest>

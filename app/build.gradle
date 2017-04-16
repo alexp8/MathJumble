@@ -65,3 +65,9 @@ dependencies {
 
 
 apply plugin: 'com.google.gms.google-services'
+dependencies {
+    compile 'com.android.support:support-v4:25.+'
+}
+dependencies {
+    compile 'com.android.support:support-v4:25.+'
+}

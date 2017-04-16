@@ -25,4 +25,7 @@
     <string name="user_name"></string>
     <string name="leaderboards_not_available">Sign in to see leaderboards</string>
     <string name="user_pic_desc">The user\'s profile picture.</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
