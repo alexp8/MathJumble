@@ -25,4 +25,6 @@
     <string name="leaderboards_not_available">You must be signed in to see leaderboards</string>
     <string name="user_pic_desc">The user\'s profile picture.</string>
     <string name="preferences_scores">Scores</string>
+    <string name="pause">Pause</string>
+    <string name="resume">Resume</string>
 </resources>

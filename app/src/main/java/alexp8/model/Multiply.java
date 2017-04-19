@@ -6,8 +6,8 @@ package alexp8.model;
 public class Multiply extends AbstractOperation {
 
     private static final int[] EASY = {6, 3};
-    private static final int[] NORMAL = {10, 5};
-    private static final int[] HARD = {25, 15};
+    private static final int[] NORMAL = {10, 4};
+    private static final int[] HARD = {25, 8};
 
     private static final int MINIMUM = 3;
 

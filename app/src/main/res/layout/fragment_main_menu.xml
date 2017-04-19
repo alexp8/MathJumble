@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
+
 
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="50dp"
         android:orientation="horizontal"
-        android:id="@+id/linearLayout">
+        android:id="@+id/signInLayout">
 
         <!-- sign-in button-->
         <com.google.android.gms.common.SignInButton
@@ -120,4 +121,38 @@
             android:layout_marginBottom="130dp"
             android:background="@drawable/light_green_bg"/>
     </RelativeLayout>
-</LinearLayout>
+    <!-- How to play layout-->
+    <RelativeLayout
+        android:layout_width="300dp"
+        android:layout_height="420dp"
+        android:orientation="horizontal"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:id="@+id/HowToPlayLayout"
+        android:background="@drawable/white_bg"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_centerHorizontal="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/how_to_play_string"
+            android:textSize="30sp"/>
+        <ImageView
+            android:id="@+id/how_to_play_img"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/how_to_play"/>
+
+        <Button
+            android:layout_width="50dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:text="@string/Close"
+            android:id="@+id/exit_how_to_play"
+            android:background="@drawable/very_light_grey_bg"/>
+    </RelativeLayout>
+
+</RelativeLayout>

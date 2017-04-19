@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity implements
             NORMAL_LEADERBOARD_ID ="CgkIpYejmpQaEAIQAw",
             HARD_LEADERBOARD_ID = "CgkIpYejmpQaEAIQBA";
 
-    private static final long TWELVE_HOURS = 1000 * 60 * 60 * 12;
+    private static final long THIRTY_SIX_HOURS = 1000 * 60 * 60 * 36;
     private GoogleApiClient myGoogleApiClient;
     private GoogleSignInOptions myGoogleSignInOptions;
     private static int RC_SIGN_IN = 9001;
@@ -68,8 +68,11 @@ public class MainActivity extends AppCompatActivity implements
     private int a = 0, b = 0, c = 0, answer = 0;
     private CountDownTimer my_timer;
     private String my_difficulty, my_leaderboard_id, my_name, my_img_url;
+    private boolean in_game = false;
+    private boolean paused = false;
 
     private MathJumble my_jumble;
+    private long pause_time;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,9 +82,6 @@ public class MainActivity extends AppCompatActivity implements
 
         myMainMenuFragment = new MainMenuFragment();
         myGameplayFragment = new GameplayFragment();
-
-        myMainMenuFragment.setArguments(getIntent().getExtras());
-
 
         myMainMenuFragment.setListener(this);
         myGameplayFragment.setListener(this);
@@ -102,6 +102,9 @@ public class MainActivity extends AppCompatActivity implements
                 .withLogEnabled(true)
                 .build(this, "TKFQ6GDYM5GR67BCKJSK");
         */
+        signIn();
+        getSupportFragmentManager().beginTransaction().add(R.id.fragment_container,
+                myMainMenuFragment).commit();
 
     }
 
@@ -111,18 +114,28 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onStart() {
         super.onStart();
-        signIn();
-        getSupportFragmentManager().beginTransaction().add(R.id.fragment_container,
-                myMainMenuFragment).commit();
+        Log.d("MathJumble", "onStart(): connecting");
+        myGoogleApiClient.connect();
     }
 
     @Override
-    protected void onPause() {
+    protected void onStop() {
+        super.onStop();
+        Log.d("MathJumble", "onStop(): disconnecting");
+        if (myGoogleApiClient.isConnected()) {
+            myGoogleApiClient.disconnect();
+        }
+    }
+
+    @Override
+    public void onPause() {
+        if (my_timer != null) pause();
         super.onPause();
     }
 
     @Override
-    protected void onResume() {
+    public void onResume() {
+        if (my_timer != null) resume();
         super.onResume();
     }
 
@@ -142,8 +155,9 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     public String getName() {return my_name;}
-
+    public boolean inGame() {return in_game;}
     public String getImgUrl() {return my_img_url;}
+    public void setInGame(boolean in_game) {this.in_game = in_game;}
 
     /**
      * Sign in the User.
@@ -242,7 +256,7 @@ public class MainActivity extends AppCompatActivity implements
 
     private void startTimer() {
         my_time = START_TIME;
-        my_timer = new CountDownTimer(TWELVE_HOURS, ONE_SECOND) { //game will not run longer than 12 hours ;)
+        my_timer = new CountDownTimer(THIRTY_SIX_HOURS, ONE_SECOND) { //game will not run longer than 36 hours ;)
             public void onTick(long milliSeconds) {
                 my_time -= 1000;
                 myGameplayFragment.updateTimer(String.valueOf(my_time / 1000));
@@ -252,7 +266,6 @@ public class MainActivity extends AppCompatActivity implements
                 }
             }
             public void onFinish() {
-                //you just played for 12 hours you genius/cheater ?
                 myGameplayFragment.updateTimer(String.valueOf(0));
                 lose();
             }
@@ -302,7 +315,26 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void menu() {
+        in_game = false;
         switchToFragment(myMainMenuFragment);
+    }
+
+
+    /**
+     * Pause the game.
+     */
+    public void pause() {
+        paused = true;
+        my_timer.cancel();
+
+    }
+
+    /**
+     * Resume the game.
+     */
+    public void resume() {
+        paused = false;
+        my_timer.start();
     }
 
     /**

@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -54,7 +55,7 @@ public class MainMenuFragment extends Fragment {
                 R.id.play_button, R.id.scores_button,
                 R.id.sign_in_button, R.id.sign_out_button,
                 R.id.easy_button, R.id.normal_button,
-                R.id.hard_button
+                R.id.hard_button, R.id.how_to_play_button, R.id.exit_how_to_play
         };
 
         for (int i : buttons)
@@ -84,6 +85,7 @@ public class MainMenuFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
     }
+
 
     /**
      *
@@ -139,7 +141,11 @@ public class MainMenuFragment extends Fragment {
                     my_listener.signOut();
                     break;
                 case R.id.how_to_play_button:
+                    myActivity.findViewById(R.id.HowToPlayLayout).setVisibility(View.VISIBLE);
                     my_listener.howToPlay();
+                    break;
+                case R.id.exit_how_to_play:
+                    myActivity.findViewById(R.id.HowToPlayLayout).setVisibility(View.GONE);
                     break;
                 case R.id.scores_button:
                     my_listener.displayLeaderboards();
