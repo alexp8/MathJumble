@@ -18,6 +18,7 @@ import android.widget.Toast;
 
 import com.example.alexp8.mathjumble.R;
 import com.google.android.gms.games.Games;
+import com.google.android.gms.vision.text.Text;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -77,6 +78,14 @@ public class GameplayFragment extends Fragment {
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+
+        //begin the game
+        my_listener.nextProblem();
+    }
+
+    @Override
     public void onAttach(Context context) {
         super.onAttach(context);
 
@@ -84,9 +93,24 @@ public class GameplayFragment extends Fragment {
             myActivity = (Activity) context;
     }
 
-    public void gameOver() {
+    public void gameOver(boolean game_over) {
+        final RelativeLayout rl = (RelativeLayout) myActivity.findViewById(R.id.game_over_layout);
+        if (game_over) {
+            flipActiveViews(0.5, false);
+            rl.setVisibility(View.VISIBLE);
+        } else {
+            flipActiveViews(1, true);
+            rl.setVisibility(View.GONE);
+        }
+    }
 
-        //RelativeLayout rl = findViewById(R.layout.game_over_layout);
+    public void gameOver(final String score, boolean game_over) {
+
+        final TextView game_over_score = (TextView) myActivity.findViewById(R.id.game_over_score_textview);
+        final String score_text = "Score " + score;
+        game_over_score.setText(score_text);
+
+        gameOver(game_over);
     }
 
     /**
@@ -99,6 +123,7 @@ public class GameplayFragment extends Fragment {
 
         if (myActivity == null) {
             Log.e("onupdate", "activity is null");
+            return;
         }
 
         TextView op_textview = (TextView) myActivity.findViewById(R.id.operation_textview);
@@ -113,7 +138,6 @@ public class GameplayFragment extends Fragment {
             }
 
             tv.setText(text);
-            i++;
         }
     }
 
@@ -130,6 +154,7 @@ public class GameplayFragment extends Fragment {
             button.setText(String.valueOf(iterator.next()));
         }
     }
+
 
     public void updateTimer(String the_time) {
         final TextView timer_textview = (TextView) myActivity.findViewById(R.id.timer_textview);
@@ -151,8 +176,8 @@ public class GameplayFragment extends Fragment {
      * @param active
      */
     public void flipActiveViews(double value, boolean active) {
-        for (int b : buttons) {
-            Button button = (Button) myActivity.findViewById(b);
+        for (int i = 0; i < 3; i++) { //disable answer buttons
+            Button button = (Button) myActivity.findViewById(buttons[i]);
             button.setEnabled(active);
             button.setAlpha((float) value);
         }
@@ -178,11 +203,11 @@ public class GameplayFragment extends Fragment {
                     my_listener.menu();
                     break;
                 case R.id.play_again_button:
+                    gameOver(false);
                     my_listener.playAgain();
                     break;
                 case R.id.a1_button:
-                    my_listener.nextProblem();
-                    //my_listener.answerButtonClick(((TextView)myActivity.findViewById(R.id.a1_button)).getText().toString());
+                    my_listener.answerButtonClick(((TextView)myActivity.findViewById(R.id.a1_button)).getText().toString());
                     break;
                 case R.id.a2_button:
                     my_listener.answerButtonClick(((TextView)myActivity.findViewById(R.id.a2_button)).getText().toString());

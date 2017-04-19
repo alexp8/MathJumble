@@ -4,17 +4,19 @@ package alexp8.model;
  * Created by Alex Peterson on 3/29/2017.
  */
 public class Multiply extends AbstractOperation {
-    /**The starting range of number for multiply and dividing.*/
-    private static final int START_MIN = 2, START_MAX = 4,
-    /**How much bigger numbers get on successive problems.*/
-    MIN_INCREASE = 1, MAX_INCREASE = 2,
-    /**Score awarded on correct answer.*/
-    SCORE_BONUS = 75;
 
-    /**Operation label to display on problem.*/
+    private static final int[] EASY = {6, 3};
+    private static final int[] NORMAL = {10, 5};
+    private static final int[] HARD = {25, 15};
+
+    private static final int MINIMUM = 3;
+
+    private static final int SCORE_BONUS = 75;
     private static final String LABEL = "*";
 
-    public Multiply() {super(START_MIN, START_MAX, MIN_INCREASE, MAX_INCREASE, SCORE_BONUS, LABEL);}
+    public Multiply(final String the_difficulty) {
+        super(SCORE_BONUS, LABEL, the_difficulty, EASY, NORMAL, HARD);
+    }
 
     /**
      * Private helper method to calculate "random" variables and missing variable.
@@ -22,8 +24,8 @@ public class Multiply extends AbstractOperation {
      */
     @Override
     public void calculateVariables(final int[] the_variables) {
-        the_variables[0] = my_rand.nextInt(cur_max - cur_min) + cur_min; //a = {cur_min, cur_max - 1}
-        the_variables[1] = my_rand.nextInt(cur_max - cur_min) + cur_min; //b = {cur_min, cur_max - 1}
+        the_variables[0] = my_rand.nextInt(cur_max - MINIMUM) + MINIMUM; //a = {MINIMUM, cur_max - 1}
+        the_variables[1] = my_rand.nextInt(cur_max - MINIMUM) + MINIMUM; //b = {MINIMUM, cur_max - 1}
         the_variables[2] = the_variables[0] * the_variables[1];
     }
 }

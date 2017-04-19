@@ -9,23 +9,13 @@ import java.util.Set;
  * Created by Alex Peterson on 3/17/2017.
  */
 public class MathJumble {
-    /**Different difficulty increases dependent on game difficulty. */
-    private static final int EASY_DIFFICULTY_INCREASE = 2, NORMAL_DIFFICULTY_INCREASE = 3,
-                            HARD_DIFFICULTY_INCREASE = 5;
-
     /**Amount of bonus time given upon correct answer.*/
     private static final int EASY_TIMER_INCREASE = 3000, NORMAL_TIMER_INCREASE = 2000, HARD_TIMER_INCREASE = 1000;
-
-    private String EASY_LEADERBOARD_ID = "CgkIpYejmpQaEAIQAg",
-                   NORMAL_LEADERBOARD_ID ="CgkIpYejmpQaEAIQAw",
-                   HARD_LEADERBOARD_ID = "CgkIpYejmpQaEAIQBA";
 
     private Random rand = new Random();
     private int unknown_index = 0, my_score = 0, my_timer_increase;
     private Operation my_operation;
     private AbstractOperation my_add, my_subtract, my_multiply, my_divide;
-    private int[] my_variables, my_answers;
-    private String my_leaderboard_id;
 
     /**
      *
@@ -35,27 +25,19 @@ public class MathJumble {
         switch (the_difficulty) {
             case "Easy":
                 my_timer_increase = EASY_TIMER_INCREASE;
-                my_leaderboard_id = EASY_LEADERBOARD_ID;
-                break;
-            case "Normal":
-                my_timer_increase = NORMAL_TIMER_INCREASE;
-                my_leaderboard_id = NORMAL_LEADERBOARD_ID;
                 break;
             case "Hard":
                 my_timer_increase = HARD_TIMER_INCREASE;
-                my_leaderboard_id = HARD_LEADERBOARD_ID;
                 break;
             default:
+                my_timer_increase = NORMAL_TIMER_INCREASE;
                 break;
         }
 
-        my_variables = new int[3];
-        my_answers = new int[3];
-
-        my_add = new Add();
-        my_divide = new Divide();
-        my_multiply = new Multiply();
-        my_subtract = new Subtract();
+        my_add = new Add(the_difficulty);
+        my_divide = new Divide(the_difficulty);
+        my_multiply = new Multiply(the_difficulty);
+        my_subtract = new Subtract(the_difficulty);
     }
 
     /**
@@ -82,10 +64,6 @@ public class MathJumble {
         my_operation.operate();
     }
 
-    public void lose() {
-
-    }
-
     /**
      * Determine if user answered correctly and progress game.
      * @param the_answer user's answer
@@ -108,5 +86,4 @@ public class MathJumble {
     public int getTimerIncrease() {return my_timer_increase;}
     public int[] getVariables() {return my_operation.getVariables();}
     public Set<Integer> getAnswers() {return my_operation.getAnswers();}
-    public String getLeaderboardID() {return my_leaderboard_id;}
 }

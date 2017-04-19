@@ -1,7 +1,9 @@
 package alexp8.controller;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.drawable.Icon;
 import android.os.CountDownTimer;
 import android.support.annotation.NonNull;
@@ -43,6 +45,11 @@ import alexp8.model.MathJumble;
 public class MainActivity extends AppCompatActivity implements
         GoogleApiClient.OnConnectionFailedListener, MainMenuFragment.Listener, GameplayFragment.Listener {
 
+    private static final String EASY_LEADERBOARD_ID = "CgkIpYejmpQaEAIQAg",
+            NORMAL_LEADERBOARD_ID ="CgkIpYejmpQaEAIQAw",
+            HARD_LEADERBOARD_ID = "CgkIpYejmpQaEAIQBA";
+
+    private static final long TWELVE_HOURS = 1000 * 60 * 60 * 12;
     private GoogleApiClient myGoogleApiClient;
     private GoogleSignInOptions myGoogleSignInOptions;
     private static int RC_SIGN_IN = 9001;
@@ -60,7 +67,7 @@ public class MainActivity extends AppCompatActivity implements
 
     private int a = 0, b = 0, c = 0, answer = 0;
     private CountDownTimer my_timer;
-    private String my_difficulty;
+    private String my_difficulty, my_leaderboard_id, my_name, my_img_url;
 
     private MathJumble my_jumble;
 
@@ -72,6 +79,9 @@ public class MainActivity extends AppCompatActivity implements
 
         myMainMenuFragment = new MainMenuFragment();
         myGameplayFragment = new GameplayFragment();
+
+        myMainMenuFragment.setArguments(getIntent().getExtras());
+
 
         myMainMenuFragment.setListener(this);
         myGameplayFragment.setListener(this);
@@ -87,16 +97,33 @@ public class MainActivity extends AppCompatActivity implements
                 .addApi(Games.API).addScope(Games.SCOPE_GAMES)
                 .build();
 
-        getSupportFragmentManager().beginTransaction().add(R.id.fragment_container,
-                myMainMenuFragment).commit();
-
         /*
         new FlurryAgent.Builder()
                 .withLogEnabled(true)
                 .build(this, "TKFQ6GDYM5GR67BCKJSK");
         */
 
+    }
 
+    /**
+     * Sign in the user on start.
+     */
+    @Override
+    protected void onStart() {
+        super.onStart();
+        signIn();
+        getSupportFragmentManager().beginTransaction().add(R.id.fragment_container,
+                myMainMenuFragment).commit();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
     }
 
     /**
@@ -110,9 +137,14 @@ public class MainActivity extends AppCompatActivity implements
             BaseGameUtils.makeSimpleDialog(this, getString(R.string.leaderboards_not_available)).show();
     }
 
-    private boolean signedIn() {
+    public boolean signedIn() {
         return (myGoogleApiClient != null && myGoogleApiClient.isConnected());
     }
+
+    public String getName() {return my_name;}
+
+    public String getImgUrl() {return my_img_url;}
+
     /**
      * Sign in the User.
      */
@@ -127,26 +159,19 @@ public class MainActivity extends AppCompatActivity implements
             @Override
             public void onResult(@NonNull Status status) {
                 myMainMenuFragment.signOut();
+                myGoogleApiClient.disconnect();
+                Toast.makeText(MainActivity.this, "Warning scores will not be saved when signed out!", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.d("MathJumble", "onConnectionFailed() called, result: " + connectionResult);
+        Log.e("MathJumble", "onConnectionFailed() called, result: " + connectionResult);
     }
 
     /**
-     *
-     */
-    @Override
-    protected void onStart() {
-        super.onStart();
-        signIn();
-    }
-
-    /**
-     *
+     * Handle the user attempting to sign in.
      * @param requestCode
      * @param resultCode
      * @param intent
@@ -155,18 +180,21 @@ public class MainActivity extends AppCompatActivity implements
         super.onActivityResult(requestCode, resultCode, intent);
 
         if (requestCode == RC_SIGN_IN) {
-
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(intent);
+
             if (result.isSuccess()) {
+                myGoogleApiClient.connect();
 
-                final String name = result.getSignInAccount().getDisplayName().toString();
-                final String img_url = result.getSignInAccount().getPhotoUrl().toString();
+                my_name = result.getSignInAccount().getDisplayName().toString();
+                my_img_url = result.getSignInAccount().getPhotoUrl().toString();
 
-                myMainMenuFragment.signIn(true, name, img_url);
+                myMainMenuFragment.displaySignedIn(true);
             } else {
                 BaseGameUtils.showActivityResultError(this,
                         requestCode, resultCode, R.string.signin_failure);
             }
+        } else {
+
         }
     }
 
@@ -175,10 +203,22 @@ public class MainActivity extends AppCompatActivity implements
      * @param the_difficulty of game
      */
     public void playGame(final String the_difficulty) {
+        my_difficulty = the_difficulty;
         my_jumble = new MathJumble(the_difficulty);
         switchToFragment(myGameplayFragment);
+
+        switch (my_difficulty) {
+            case "Normal":
+                my_leaderboard_id = NORMAL_LEADERBOARD_ID;
+                break;
+            case "Hard":
+                my_leaderboard_id = HARD_LEADERBOARD_ID;
+                break;
+            default:
+                my_leaderboard_id = EASY_LEADERBOARD_ID;
+                break;
+        }
         startTimer();
-        //nextProblem();
     }
 
     /**
@@ -200,34 +240,19 @@ public class MainActivity extends AppCompatActivity implements
         myGameplayFragment.updateButtons(answers);
     }
 
-    /**
-     *
-     */
-    private void lose() {
-
-        if (signedIn())
-            Games.Leaderboards.submitScore(myGoogleApiClient, my_jumble.getLeaderboardID(),  my_jumble.getScore());
-        else {
-            //store locally
-        }
-
-        my_timer.cancel();
-        my_jumble.lose();
-
-        final String score = String.valueOf(my_jumble.getScore());
-        myGameplayFragment.updateScore(score);
-        myGameplayFragment.flipActiveViews(0.5, false);
-        myGameplayFragment.gameOver();
-    }
-
     private void startTimer() {
         my_time = START_TIME;
-        my_timer = new CountDownTimer(START_TIME, ONE_SECOND) {
+        my_timer = new CountDownTimer(TWELVE_HOURS, ONE_SECOND) { //game will not run longer than 12 hours ;)
             public void onTick(long milliSeconds) {
                 my_time -= 1000;
                 myGameplayFragment.updateTimer(String.valueOf(my_time / 1000));
+
+                if (my_time == 0) {
+                    lose();
+                }
             }
             public void onFinish() {
+                //you just played for 12 hours you genius/cheater ?
                 myGameplayFragment.updateTimer(String.valueOf(0));
                 lose();
             }
@@ -236,6 +261,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void answerButtonClick(String value) {
+        if (value == null || value.equals("")) return;
 
         final int answer = Integer.valueOf(value);
         final boolean correct = my_jumble.answer(answer);
@@ -244,9 +270,27 @@ public class MainActivity extends AppCompatActivity implements
             nextProblem();
             my_time += my_jumble.getTimerIncrease();
             myGameplayFragment.updateScore(String.valueOf(my_jumble.getScore()));
+            myGameplayFragment.updateTimer(String.valueOf(my_time / 1000));
         }
         else
             lose();
+    }
+
+
+    /**
+     *
+     */
+    private void lose() {
+
+        my_timer.cancel();
+
+        //submit the score otherwise store locally
+        if (signedIn()) {
+            Games.Leaderboards.submitScore(myGoogleApiClient, my_leaderboard_id,  my_jumble.getScore());
+        }
+
+        final String score = String.valueOf(my_jumble.getScore());
+        myGameplayFragment.gameOver(score, true);
     }
 
     @Override

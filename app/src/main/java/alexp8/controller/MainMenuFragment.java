@@ -13,6 +13,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.example.alexp8.mathjumble.R;
@@ -33,6 +34,9 @@ public class MainMenuFragment extends Fragment {
         void playGame(String difficulty);
         void displayLeaderboards();
         void howToPlay();
+        boolean signedIn();
+        String getName();
+        String getImgUrl();
     }
 
     public void setListener(Listener listener) {
@@ -47,7 +51,7 @@ public class MainMenuFragment extends Fragment {
         my_click_listener = new MenuListener();
 
         final int[] buttons = new int[] {
-            R.id.play_button, R.id.scores_button,
+                R.id.play_button, R.id.scores_button,
                 R.id.sign_in_button, R.id.sign_out_button,
                 R.id.easy_button, R.id.normal_button,
                 R.id.hard_button
@@ -59,8 +63,13 @@ public class MainMenuFragment extends Fragment {
         return v;
     }
 
-    public void signOut() {
-        signIn(false, "", "");
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        if (my_listener.signedIn()) {
+            displaySignedIn(true);
+        }
     }
 
     @Override
@@ -83,13 +92,17 @@ public class MainMenuFragment extends Fragment {
         LinearLayout my_difficulty_buttons = (LinearLayout) myActivity.findViewById(R.id.difficulty_buttons_layout);
         my_difficulty_buttons.setVisibility(View.VISIBLE);
     }
+
+    /** */
+    public void signOut() {
+        displaySignedIn(false);
+    }
+
     /**
-     *
-     * @param signedIn
-     * @param name
-     * @param img_url
+     * Display the corresponding views if the user is signed in or signed out.
+     * @param signedIn boolean true or false if user is signed in
      */
-    public void signIn(boolean signedIn, String name, String img_url) {
+    public void displaySignedIn(boolean signedIn) {
 
         final ImageView user_pic = (ImageView) myActivity.findViewById(R.id.user_pic);
         final TextView user_name = (TextView) myActivity.findViewById(R.id.user_name);
@@ -99,9 +112,9 @@ public class MainMenuFragment extends Fragment {
         if (signedIn) {
             signInButton.setVisibility(View.GONE);
             signOutButton.setVisibility(View.VISIBLE);
-            user_name.setText(name);
+            user_name.setText(my_listener.getName());
             user_name.setVisibility(View.VISIBLE);
-            Glide.with(this).load(img_url).into(user_pic);
+            Glide.with(this).load(my_listener.getImgUrl()).into(user_pic);
             user_pic.setVisibility(View.VISIBLE);
 
         } else {

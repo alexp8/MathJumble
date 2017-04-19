@@ -5,17 +5,20 @@ package alexp8.model;
  */
 
 public class Subtract extends AbstractOperation {
-    /**The starting range of number for adding and subtracting.*/
-    private static final int START_MAX = 15, START_MIN = 5;
 
-    /** */
-    private static final int MIN_INCREASE = 3, MAX_INCREASE = 5;
+    private static final int[] EASY = {10, 5};
+    private static final int[] NORMAL = {10, 5};
+    private static final int[] HARD = {10, 5};
+
+    private static final int MINIMUM = 3;
 
     /** */
     private static final int SCORE_BONUS = 50;
     private static final String LABEL = "-";
 
-    public Subtract() {super(START_MIN, START_MAX, MIN_INCREASE, MAX_INCREASE, SCORE_BONUS, LABEL);}
+    public Subtract(final String the_difficulty) {
+        super(SCORE_BONUS, LABEL, the_difficulty, EASY, NORMAL, HARD);
+    }
 
     /**
      * Private helper method to calculate "random" variables and missing variable.
@@ -23,8 +26,8 @@ public class Subtract extends AbstractOperation {
      */
     @Override
     public void calculateVariables(final int[] the_variables) {
-        the_variables[0] = my_rand.nextInt(cur_max) + cur_min; //a = {cur_min, cur_min + cur_max - 1}
-        the_variables[1] = my_rand.nextInt(the_variables[0] - cur_min + 1) + cur_min; //b = {a - cur_min, cur_min + a - 1}
-        the_variables[2] = the_variables[0] - the_variables[1];
+        the_variables[1] = my_rand.nextInt(cur_max) + MINIMUM; //b = {MINIMUM, cur_max - 1}
+        the_variables[2] = my_rand.nextInt(cur_max) + MINIMUM; //c = {MINIMUM, b - 1}
+        the_variables[0] = the_variables[1] + the_variables[2]; //a = b + c  same as c = a - b
     }
 }

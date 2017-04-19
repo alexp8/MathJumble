@@ -10,32 +10,43 @@ import java.util.Set;
 
 public abstract class AbstractOperation implements Operation {
 
-    protected int my_answer = 0, cur_max, cur_min, my_unknown_index = 0, my_score_bonus,
-            my_max_increase, my_min_increase;
+    protected int my_answer = 0, cur_max, my_unknown_index = 0, my_score_bonus,
+            my_max_increase;
     protected Random my_rand;
     private String my_label;
     private int[] my_variables;
     private Set<Integer> my_answers;
+
 
     /**
      *
      * @param the_score_bonus the points rewarded for completing problem type
      * @param the_label the operation string of the current problem
      */
-    public AbstractOperation(final int the_start_min, final int the_start_max, final int the_min_increase,
-                             final int the_max_increase, final int the_score_bonus,
-                             final String the_label) {
+    public AbstractOperation(final int the_score_bonus, final String the_label, final String the_difficulty,
+                             final int[] easy, final int[] normal, final int[] hard) {
 
-        cur_min = the_start_min;
-        cur_max = the_start_max;
         my_score_bonus = the_score_bonus;
         my_label = the_label;
-        my_max_increase = the_max_increase;
-        my_min_increase = the_min_increase;
 
         my_variables = new int[3];
         my_rand = new Random();
         my_answers = new HashSet<Integer>();
+
+        switch (the_difficulty) {
+            case "Easy":
+                cur_max = easy[0];
+                my_max_increase = easy[1];
+                break;
+            case "Hard":
+                cur_max = hard[0];
+                my_max_increase = hard[1];
+                break;
+            default:
+                cur_max = normal[0];
+                my_max_increase = normal[1];
+                break;
+        }
     }
 
     /**Getters for data MathJumble will need.*/
@@ -51,7 +62,6 @@ public abstract class AbstractOperation implements Operation {
      */
     public void increaseRange() {
         cur_max += my_max_increase;
-        cur_min += my_min_increase;
     }
 
     /**
@@ -59,7 +69,7 @@ public abstract class AbstractOperation implements Operation {
      * @param vars fill an array with 3 numbers for the problem
      * @return the answer to the created problem
      */
-    public abstract void calculateVariables(int[] vars);
+    protected abstract void calculateVariables(int[] vars);
 
     /**
      *

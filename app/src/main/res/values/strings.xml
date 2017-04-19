@@ -15,17 +15,14 @@
     <string name="easy_string">Easy</string>
     <string name="normal_string">Normal</string>
     <string name="hard_string">Hard</string>
-
     <string name="how_to_play_string">How To Play</string>
     <string name="sign_out">Sign Out</string>
     <string name="signin_other_error">Unable to sign in</string>
     <string name="sign_in">Sign in</string>
-    <string name="signin_failure">Unable to sign in</string>
+    <string name="signin_failure">Unable to sign in. Warning: your scores will not be saved!</string>
     <string name="signin_success">Signed in successfully</string>
     <string name="user_name"></string>
-    <string name="leaderboards_not_available">Sign in to see leaderboards</string>
+    <string name="leaderboards_not_available">You must be signed in to see leaderboards</string>
     <string name="user_pic_desc">The user\'s profile picture.</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="preferences_scores">Scores</string>
 </resources>
