@@ -19,16 +19,6 @@ android {
     }
 }
 
-dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    })
-    compile 'com.android.support.constraint:constraint-layout:1.0.2'
-    testCompile 'junit:junit:4.12'
-}
-
-
 buildscript {
     repositories {
         jcenter()
@@ -45,29 +35,12 @@ allprojects {
     }
 }
 
-// In your main app's Gradle config file:
-dependencies {
-    compile 'com.flurry.android:analytics:6.3.1'
-    /*
-     * Optional library to help monetizing your app with ads.
-     * If you include the ads library, you do not need to include
-     * the analytics library as it is a transitive dependency.
-     */
-    // compile 'com.flurry.android:ads:6.2.0'
-    //... other dependencies
-}
-
 dependencies {
     compile project(':BaseGameUtils')
-    compile 'com.google.android.gms:play-services:10.2.1'
     compile 'com.github.bumptech.glide:glide:3.7.0'
+    compile 'com.google.firebase:firebase-auth:10.2.1'
+    compile 'com.google.android.gms:play-services-auth:10.2.1'
+    compile 'com.android.support:appcompat-v7:25.3.1'
 }
-
 
 apply plugin: 'com.google.gms.google-services'
-dependencies {
-    compile 'com.android.support:support-v4:25.+'
-}
-dependencies {
-    compile 'com.android.support:support-v4:25.+'
-}

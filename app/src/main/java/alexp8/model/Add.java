@@ -7,6 +7,7 @@ package alexp8.model;
  */
 public class Add extends AbstractOperation {
 
+    /**3 arrays holding starting max value, and max increase as game progresses*/
     private static final int[] EASY = {10, 10};
     private static final int[] NORMAL = {25, 25};
     private static final int[] HARD = {100, 50};

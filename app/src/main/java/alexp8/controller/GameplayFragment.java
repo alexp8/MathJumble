@@ -15,21 +15,20 @@ import android.widget.TextView;
 
 import com.example.alexp8.mathjumble.R;
 
-import java.util.Iterator;
-import java.util.Set;
-
 /**
  * Fragment handling the game UI.
  */
 public class GameplayFragment extends Fragment {
 
+    private static final float TRANSPARENT = (float) 0.5;
+    private static final float FULL = 1;
     private Listener my_listener = null;
     private Activity myActivity;
 
     private int[] buttons;
     private int[] textviews;
     private String my_time = "";
-    private Button my_last_button, my_correct_button;
+    private Button my_last_button;
 
     public interface Listener {
         void answerButtonClick(String value);
@@ -39,7 +38,6 @@ public class GameplayFragment extends Fragment {
         void pause();
         void resume();
         void quit();
-        void setPaused(boolean b);
         boolean inGame();
         void setInGame(boolean b);
     }
@@ -98,10 +96,10 @@ public class GameplayFragment extends Fragment {
     public void gameOver(final boolean game_over) {
         final RelativeLayout gameOverLayout = (RelativeLayout) myActivity.findViewById(R.id.game_over_layout);
         if (game_over) {
-            flipActiveViews(0.5, false);
+            flipActiveViews(TRANSPARENT, false);
             gameOverLayout.setVisibility(View.VISIBLE);
         } else {
-            flipActiveViews(1, true);
+            flipActiveViews(FULL, true);
             gameOverLayout.setVisibility(View.GONE);
         }
     }
@@ -118,7 +116,6 @@ public class GameplayFragment extends Fragment {
         game_over_score.setText(score_text);
 
         my_last_button.setBackgroundResource(R.drawable.red_bg);
-        my_correct_button.setBackgroundResource(R.drawable.light_green_bg);
         my_last_button.setTextColor(Color.WHITE);
 
         gameOver(game_over);
@@ -127,17 +124,18 @@ public class GameplayFragment extends Fragment {
     /**
      * Update the variables.
      */
-    public void updateTextViews(int[] variables, String operation, int unknown_i, long the_time) {
+    public void updateTextViews(final int[] variables, final String operation, final int unknown_i,
+                                final String the_score, final String the_time) {
 
         if (myActivity == null) {
             Log.e("onupdate", "activity is null");
             return;
         }
 
-        final TextView op_textview = (TextView) myActivity.findViewById(R.id.operation_textview);
-        op_textview.setText(operation);
-        ((TextView) myActivity.findViewById(R.id.timer_textview)).setText(String.valueOf(the_time));
-
+        //update operation, timer, and score
+        ((TextView) myActivity.findViewById(R.id.operation_textview)).setText(operation);
+        ((TextView) myActivity.findViewById(R.id.score_textview)).setText(the_score);
+        ((TextView) myActivity.findViewById(R.id.timer_textview)).setText(the_time);
 
         for (int i = 0; i < textviews.length; i++) {
             final TextView tv =  ((TextView) myActivity.findViewById(textviews[i]));
@@ -149,7 +147,6 @@ public class GameplayFragment extends Fragment {
 
             tv.setText(text);
         }
-        my_correct_button = (Button) myActivity.findViewById(buttons[unknown_i]);
     }
 
     /**
@@ -164,18 +161,9 @@ public class GameplayFragment extends Fragment {
         }
     }
 
-    public void updateTimer(String the_time) {
+    public void updateTimer(final String the_time) {
         final TextView timer_textview = (TextView) myActivity.findViewById(R.id.timer_textview);
         timer_textview.setText(the_time);
-    }
-
-    /**
-     * Update the user's score.
-     * @param the_score of game
-     */
-    public void updateScore(final String the_score) {
-        final TextView score_tv = (TextView) myActivity.findViewById(R.id.score_textview);
-        score_tv.setText(the_score);
     }
 
     /**
@@ -183,17 +171,17 @@ public class GameplayFragment extends Fragment {
      * @param value value to set opacity of background (faded or full)
      * @param game_active set buttons enabled if  game is playing
      */
-    public void flipActiveViews(double value, boolean game_active) {
+    public void flipActiveViews(float value, boolean game_active) {
 
         for (int i = 0; i < 4; i++) { //enable/disable pause and answer buttons
             Button button = (Button) myActivity.findViewById(buttons[i]);
             button.setEnabled(game_active);
-            button.setAlpha((float) value);
+            button.setAlpha(value);
         }
 
         for (int tv : textviews) {
             TextView textview = (TextView) myActivity.findViewById(tv);
-            textview.setAlpha((float) value);
+            textview.setAlpha(value);
         }
 
         myActivity.findViewById(R.id.pause_button).setAlpha((float) value);
@@ -215,14 +203,13 @@ public class GameplayFragment extends Fragment {
                     my_listener.menu();
                     break;
                 case R.id.menu_button_at_pause:
-                    my_listener.setPaused(true);
                     my_listener.quit();
                     my_listener.menu();
                     break;
                 case R.id.play_again_button:
                     my_last_button.setBackgroundResource(R.drawable.light_orange_bg);
-                    my_correct_button.setBackgroundResource(R.drawable.light_orange_bg);
                     my_last_button.setTextColor(Color.BLACK);
+                    ((TextView)myActivity.findViewById(R.id.score_textview)).setText(String.valueOf(0));
                     my_listener.setInGame(true);
                     gameOver(false);
                     my_listener.playAgain();
@@ -241,11 +228,10 @@ public class GameplayFragment extends Fragment {
                     break;
                 case R.id.pause_button:
                     my_listener.pause();
-                    flipActiveViews(0.5, false);
+                    flipActiveViews(TRANSPARENT, false);
                     myActivity.findViewById(R.id.pause_screen_layout).setVisibility(View.VISIBLE);
                     break;
                 case R.id.resume_button:
-                    my_listener.setPaused(false);
                     my_listener.resume();
                     flipActiveViews(1, true);
                     myActivity.findViewById(R.id.pause_screen_layout).setVisibility(View.GONE);

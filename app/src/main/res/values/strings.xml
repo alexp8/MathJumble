@@ -8,7 +8,7 @@
     <string name="Easy">Easy</string>
     <string name="Normal">Normal</string>
     <string name="Hard">Hard</string>
-    <string name="Close">X</string>
+    <string name="close">Close</string>
     <string name="game_over_string">Game Over</string>
     <string name="play_again_string">Play Again</string>
     <string name="menu_string">Main Menu</string>
@@ -21,7 +21,6 @@
     <string name="sign_in">Sign in</string>
     <string name="signin_failure">Unable to sign in. Warning: your scores will not be saved!</string>
     <string name="signin_success">Signed in successfully</string>
-    <string name="user_name"></string>
     <string name="leaderboards_not_available">You must be signed in to see leaderboards</string>
     <string name="user_pic_desc">The user\'s profile picture.</string>
     <string name="preferences_scores">Scores</string>
@@ -29,4 +28,14 @@
     <string name="resume">Resume</string>
     <string name="how_to_play_desc">image_displaying_how_to_play_the_game</string>
     <string name="zero">0</string>
+    <string name="email_subject">MathJumble Feedback Message</string>
+    <string name="feedback_email">mathjumblefeedback@gmail.com</string>
+    <string name="title_send_feedback">Feedback:</string>
+    <string name="feedback">Feedback</string>
+    <string name="cancel">Cancel</string>
+    <string name="send_feedback">Send Feedback</string>
+    <string name="x">x</string>
+    <string name="feedback_failure">You must be signed in to send feedback!</string>
+    <string name="send_feedback_failure">Unable to send feedback!</string>
+    <string name="feedback_hint">List any bugs, criticisms, questions, etc.</string>
 </resources>

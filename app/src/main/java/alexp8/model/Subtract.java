@@ -7,13 +7,13 @@ package alexp8.model;
  */
 public class Subtract extends AbstractOperation {
 
-    /**3 arrays holding min increase and max increase per problem solved*/
+    /**3 arrays holding starting max value, and max increase as game progresses*/
     private static final int[] EASY_DIFFICULTY = {10, 5};
     private static final int[] NORMAL_DIFFICULTY = {10, 5};
     private static final int[] HARD_DIFFICULTY = {10, 5};
 
     private static final int MINIMUM = 3;
-    
+
     private static final int SCORE_BONUS = 50;
     private static final String LABEL = "-";
 

@@ -7,10 +7,12 @@ package alexp8.model;
  */
 public class Multiply extends AbstractOperation {
 
+    /**3 arrays holding starting max value, and max increase as game progresses*/
     private static final int[] EASY = {6, 3};
     private static final int[] NORMAL = {10, 4};
     private static final int[] HARD = {25, 8};
 
+    /**The smallest value a or b will equal when finding c.*/
     private static final int MINIMUM = 3;
 
     private static final int SCORE_BONUS = 75;

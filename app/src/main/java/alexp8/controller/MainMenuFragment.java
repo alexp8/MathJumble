@@ -8,9 +8,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.example.alexp8.mathjumble.R;
@@ -21,9 +24,15 @@ import com.google.android.gms.common.SignInButton;
  */
 public class MainMenuFragment extends Fragment {
 
+    private static final float FULL = 1;
+    private static final float TRANSPARENT = (float) 0.5;
+
     private Listener my_listener = null;
     private Activity myActivity;
 
+    private String my_feedback;
+
+    private int[] button_ids;
     public interface Listener {
         void signOut();
         void signIn();
@@ -34,6 +43,7 @@ public class MainMenuFragment extends Fragment {
         String getImgUrl();
         boolean inGame();
         void setInGame(boolean b);
+        void sendFeedback(String message);
     }
 
     public void setListener(Listener listener) {
@@ -47,14 +57,16 @@ public class MainMenuFragment extends Fragment {
         final View v = inflater.inflate(R.layout.fragment_main_menu, container, false);
         final MenuListener my_click_listener = new MenuListener();
 
-        final int[] buttons = new int[] {
-                R.id.play_button, R.id.scores_button,
-                R.id.sign_in_button, R.id.sign_out_button,
+        button_ids = new int[] {
+                R.id.sign_in_button, R.id.play_button,
+                 R.id.sign_out_button, R.id.scores_button,
                 R.id.easy_button, R.id.normal_button,
-                R.id.hard_button, R.id.how_to_play_button, R.id.exit_how_to_play
+                R.id.hard_button, R.id.how_to_play_button,
+                R.id.feedback_button, R.id.cancel_feedback_button,
+                R.id.close_how_to_play, R.id.send_feedback_button
         };
 
-        for (int i : buttons)
+        for (int i : button_ids)
             v.findViewById(i).setOnClickListener(my_click_listener);
 
         return v;
@@ -126,10 +138,34 @@ public class MainMenuFragment extends Fragment {
         }
     }
 
+    /**Disable all other buttons while in how to play mode except close button.*/
+    private void disableOtherButtons(boolean active) {
+
+        SignInButton sb = (SignInButton) myActivity.findViewById(R.id.sign_in_button);
+        sb.setEnabled(active);
+        sb.setAlpha(active ? FULL : TRANSPARENT);
+
+        for (int i = 1; i < button_ids.length; i++) {
+            Button b = (Button) myActivity.findViewById(button_ids[i]);
+
+            if (b.getId() != R.id.close_how_to_play && b.getId() != R.id.cancel_feedback_button
+                    && b.getId() != R.id.send_feedback_button) {
+                b.setEnabled(active);
+                sb.setAlpha(active ? FULL : TRANSPARENT);
+            }
+        }
+    }
+
+    private void showFeedback(boolean show) {
+        final RelativeLayout feedback_layout = (RelativeLayout) myActivity.findViewById(R.id.feedback_layout);
+        feedback_layout.setVisibility(show ? View.VISIBLE : View.GONE);
+    }
+
     /**
      * Perform the action of the corresponding button.
      */
     private class MenuListener implements View.OnClickListener {
+
         @Override
         public void onClick(View v) {
             switch (v.getId()) {
@@ -140,10 +176,12 @@ public class MainMenuFragment extends Fragment {
                     my_listener.signOut();
                     break;
                 case R.id.how_to_play_button:
+                    disableOtherButtons(false);
+                    showDifficultyButtons(false);
                     myActivity.findViewById(R.id.HowToPlayLayout).setVisibility(View.VISIBLE);
                     break;
-                case R.id.exit_how_to_play:
-                    showDifficultyButtons(false);
+                case R.id.close_how_to_play:
+                    disableOtherButtons(true);
                     myActivity.findViewById(R.id.HowToPlayLayout).setVisibility(View.GONE);
                     break;
                 case R.id.scores_button:
@@ -161,6 +199,31 @@ public class MainMenuFragment extends Fragment {
                     break;
                 case R.id.hard_button:
                     my_listener.playGame(getString(R.string.hard_string));
+                    break;
+                case R.id.feedback_button:
+                    if (my_listener.signedIn()){
+                        disableOtherButtons(false);
+                        showFeedback(true);
+                    } else {
+                        Toast.makeText(myActivity, R.string.feedback_failure, Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                case R.id.cancel_feedback_button:
+                    disableOtherButtons(true);
+                    showFeedback(false);
+                    break;
+                case R.id.send_feedback_button:
+                    final EditText text = (EditText) myActivity.findViewById(R.id.feedback_message);
+
+                    if (my_listener.signedIn() && text.length() > 0)
+                        my_listener.sendFeedback(text.getText().toString());
+                    else
+                        Toast.makeText(myActivity, R.string.send_feedback_failure, Toast.LENGTH_SHORT).show();
+
+                    text.setText("");
+                    showFeedback(false);
+                    break;
+                default:
                     break;
             }
         }

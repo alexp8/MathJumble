@@ -51,12 +51,18 @@ public class MainActivity extends AppCompatActivity implements
 
     private long my_time, my_resume_time, my_pause_time;
     private String my_difficulty = "", my_leaderboard_id, my_name, my_img_url;
-    /**in_game for when a user has a game going, paused if the user hit pause*/
-    private boolean in_game = false, paused = false;
+
+     /** 
+      *  in_game = true for when a user is on game screen,
+      *  in_game can be true while game_is_going false.
+      *  game_is_going = false if user lost or hit pause
+      */
+    private boolean in_game = false, game_is_going = false;
 
     private MathJumble my_jumble;
     private CountDownTimer my_timer;
     private int tick = 0;
+    private String my_email;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,21 +99,21 @@ public class MainActivity extends AppCompatActivity implements
         my_timer = new CountDownTimer(THIRTY_SIX_HOURS, ONE_TENTH_SECOND) {
             @Override
             public void onTick(long millisUntilFinished) {
-
-                if (tick % 10 == 0) {
-
-                    if (in_game) {
-                        my_time -= 1000;
-                        if (myGameplayFragment.isAdded())
-                            myGameplayFragment.updateTimer(String.valueOf(my_time / 1000));
-                        if (my_time < 100) //round to tenth of a second
-                            lose();
-                    }
-
-                    Log.d("MathJumble", "ticking " + my_time);
-                }
-
                 tick++;
+
+                if (tick % 10 == 0 && game_is_going) { //increment timer every second and only when unpaused
+                    tick = 0;
+                    my_time -= 1000;
+
+                    if (myGameplayFragment.isAdded())
+                        myGameplayFragment.updateTimer(String.valueOf(my_time / 1000));
+                    if (my_time < 100) //round to tenth of a second
+                        lose();
+
+                } else if (!game_is_going) {
+                    my_timer.cancel();
+                }
+                Log.d("MathJumble", "ticking " + my_time);
             }
 
             @Override
@@ -147,7 +153,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onResume() {
-        if (!paused) resume();
+        if (!game_is_going) resume();
         super.onResume();
     }
 
@@ -158,14 +164,7 @@ public class MainActivity extends AppCompatActivity implements
     public String getName() {return my_name;}
     public String getImgUrl() {return my_img_url;}
 
-    /**
-     * Sign in the User.
-     */
-    public void signIn() {
-        final Intent intent = Auth.GoogleSignInApi.getSignInIntent(myGoogleApiClient);
-        startActivityForResult(intent, RC_SIGN_IN);
-    }
-
+    /**Sign out the user.*/
     public void signOut() {
 
         Auth.GoogleSignInApi.signOut(myGoogleApiClient).setResultCallback(new ResultCallback<Status>() {
@@ -173,7 +172,7 @@ public class MainActivity extends AppCompatActivity implements
             public void onResult(@NonNull Status status) {
                 myMainMenuFragment.signOut();
                 myGoogleApiClient.disconnect();
-                Toast.makeText(MainActivity.this, "Warning scores will not be saved when signed out!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Warning scores will not be saved when signed out!", Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -183,12 +182,22 @@ public class MainActivity extends AppCompatActivity implements
         Log.e("MathJumble", "onConnectionFailed() called, result: " + connectionResult);
     }
 
+    /**Sign in the user.*/
+    public void signIn() {
+        final Intent intent = Auth.GoogleSignInApi.getSignInIntent(myGoogleApiClient);
+        startActivityForResult(intent, RC_SIGN_IN);
+    }
+
     /**
      * Display the leaderboards to the user.
      */
     public void displayLeaderboards() {
-        startActivityForResult(Games.Leaderboards.getAllLeaderboardsIntent(myGoogleApiClient),
-                RC_SCOREBOARD);
+        if (signedIn()) {
+            final Intent leaderboard_intent = Games.Leaderboards.getAllLeaderboardsIntent(myGoogleApiClient);
+            startActivityForResult(leaderboard_intent, RC_SCOREBOARD);
+        } else {
+            Toast.makeText(this, R.string.leaderboards_not_available, Toast.LENGTH_SHORT).show();
+        }
     }
 
     /**
@@ -209,6 +218,7 @@ public class MainActivity extends AppCompatActivity implements
 
                 my_name = result.getSignInAccount().getDisplayName();
                 my_img_url = result.getSignInAccount().getPhotoUrl().toString();
+                my_email = result.getSignInAccount().getEmail();
 
                 myMainMenuFragment.displaySignedIn(true);
             } else {
@@ -217,10 +227,6 @@ public class MainActivity extends AppCompatActivity implements
                     myGoogleApiClient.disconnect();
                 Toast.makeText(this, R.string.signin_failure, Toast.LENGTH_SHORT).show();
             }
-        } else if (requestCode == RC_SCOREBOARD) {
-            if (!signedIn())
-                Toast.makeText(this, R.string.leaderboards_not_available, Toast.LENGTH_SHORT).show();
-
         }
     }
 
@@ -246,6 +252,7 @@ public class MainActivity extends AppCompatActivity implements
      */
     public void playGame(final String the_difficulty) {
         my_time = START_TIME; //reset time
+        game_is_going = true;
         startTimer();
 
         if (!my_difficulty.equals(the_difficulty)) {
@@ -272,7 +279,8 @@ public class MainActivity extends AppCompatActivity implements
         answers[1] = String.valueOf(iterator.next());
         answers[2]= String.valueOf(iterator.next());
 
-        myGameplayFragment.updateTextViews(variables, my_jumble.getOperationText(), my_jumble.getUnknownIndex(), my_time);
+        myGameplayFragment.updateTextViews(variables, my_jumble.getOperationText(), my_jumble.getUnknownIndex(),
+                String.valueOf(my_jumble.getScore()), String.valueOf(my_time / 1000));
         myGameplayFragment.updateButtons(answers);
     }
 
@@ -290,19 +298,17 @@ public class MainActivity extends AppCompatActivity implements
         if (correct) {
             nextProblem();
             my_time += my_jumble.getTimerIncrease();
-            myGameplayFragment.updateScore(String.valueOf(my_jumble.getScore()));
-            myGameplayFragment.updateTimer(String.valueOf(my_time / 1000));
         } else {
             lose();
         }
     }
 
-
     /**
      * End the game, display game over screen, submit their score.
      */
     private void lose() {
-        pauseTimer();
+        tick = 0;
+        game_is_going = false;
 
         submitScore();
 
@@ -325,23 +331,14 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void playAgain() {
         playGame(my_difficulty);
-        my_time += 1000;
         nextProblem();
-    }
-
-    private void startTimer() {
-        my_timer.start();
-    }
-
-    private void pauseTimer() {
-        my_timer.cancel();
     }
 
     /**
      * User during game hits pause screen, hits menu.
      */
     public void quit() {
-        pauseTimer();
+        game_is_going = false;
         menu();
     }
 
@@ -352,8 +349,6 @@ public class MainActivity extends AppCompatActivity implements
     public void menu() {
         switchToFragment(myMainMenuFragment);
     }
-
-    public void setPaused(boolean paused) {this.paused = paused;}
 
     @Override
     public boolean inGame() {
@@ -368,26 +363,35 @@ public class MainActivity extends AppCompatActivity implements
     /*** Pause the game.*/
     public void pause() {
         if (in_game) {
-            pauseTimer();
+            game_is_going = false;
             long cur_time = System.currentTimeMillis();
             Log.d("MathJumble", "paused at " + cur_time);
-            my_pause_time = cur_time % 1000;
+            my_pause_time = cur_time % 1000; //grab the milliseconds
         }
     }
 
     /*** Resume the game.*/
     public void resume() {
         if (in_game) {
-            long cur_time = System.currentTimeMillis();
-            Log.d("MathJumble", "resumed at " + cur_time);
-            my_resume_time = cur_time % 1000;
-
-            long delay_time = my_resume_time - my_pause_time;
-            Log.d("MathJumble", "delay time: " + delay_time);
-            my_time += (long) Math.abs(delay_time);
+            game_is_going = true;
 
             startTimer();
         }
+    }
+
+    private void startTimer() {
+        my_timer.start();
+    }
+
+    /**Email feedback from a user.*/
+    public void sendFeedback(final String message) {
+        Intent email = new Intent(Intent.ACTION_SEND);
+        email.setType("message");
+        email.putExtra(Intent.EXTRA_EMAIL, new String[]{getString(R.string.feedback_email)});
+        email.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.email_subject));
+        email.putExtra(Intent.EXTRA_USER, my_email + "\n");
+        email.putExtra(Intent.EXTRA_TEXT, message);
+        startActivity(Intent.createChooser(email, getString(R.string.title_send_feedback)));
     }
 
     /**
