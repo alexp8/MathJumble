@@ -65,7 +65,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="85dp"
+            android:layout_marginTop="110dp"
             android:text="@string/play_string"
             android:background="@drawable/light_blue_bg"/>
 
@@ -89,6 +89,7 @@
                 android:id="@+id/normal_button"
                 android:text="@string/normal_string"
                 android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/light_orange_bg"/>
@@ -96,6 +97,7 @@
                 android:id="@+id/hard_button"
                 android:text="@string/hard_string"
                 android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/light_red_bg"/>
@@ -108,7 +110,7 @@
             android:text="@string/how_to_play_string"
             android:layout_below="@+id/play_button"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="100dp"
+            android:layout_marginTop="110dp"
             android:background="@drawable/light_purple_bg"/>
 
         <Button
@@ -121,6 +123,7 @@
             android:layout_marginBottom="130dp"
             android:background="@drawable/light_green_bg"/>
     </RelativeLayout>
+
     <!-- How to play layout-->
     <RelativeLayout
         android:layout_width="300dp"
@@ -133,16 +136,21 @@
         android:visibility="gone">
 
         <TextView
-            android:layout_centerHorizontal="true"
+            android:id="@+id/how_to_play_tv"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/how_to_play_string"
             android:textSize="30sp"/>
+
         <ImageView
             android:id="@+id/how_to_play_img"
+            android:layout_below="@id/how_to_play_tv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/how_to_play"/>
+            android:src="@drawable/how_to_play"
+            android:contentDescription="@string/how_to_play_desc" />
 
         <Button
             android:layout_width="50dp"

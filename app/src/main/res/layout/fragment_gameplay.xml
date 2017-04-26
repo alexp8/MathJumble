@@ -15,50 +15,65 @@
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="80dp" />
 
-    <!-- Timer textview label -->
-    <TextView
-        android:id="@+id/timer_textview_label"
-        android:textSize="18sp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
-        android:layout_marginLeft="20dp"
-        android:layout_marginTop="20dp"
-        android:text="@string/timer_string"/>
+    <!-- Timer layout -->
+    <RelativeLayout
+        android:id="@+id/timer_layout"
+        android:layout_marginLeft="10dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_width="75dp"
+        android:layout_height="75dp">
 
-    <!-- Timer textview  -->
-    <TextView
-        android:id="@+id/timer_textview"
-        android:textSize="35sp"
-        android:layout_below="@+id/timer_textview_label"
-        android:layout_width="50dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
-        android:layout_marginLeft="20dp"
-        android:layout_marginTop="10dp"/>
+        <!-- Timer textview label -->
+        <TextView
+            android:id="@+id/timer_textview_label"
+            android:textSize="18sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/timer_string"
+            android:layout_centerHorizontal="true"/>
 
-    <!-- Score label -->
-    <TextView
-        android:id="@+id/score_textview_label"
-        android:textSize="18sp"
-        android:layout_marginTop="20dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/score_string"
-        android:layout_marginLeft="235dp"
-        android:layout_marginStart="235dp"
-        android:layout_toRightOf="@id/timer_textview_label"
-        android:layout_toEndOf="@id/timer_textview_label"/>
+        <!-- Timer textview value -->
+        <TextView
+            android:id="@+id/timer_textview"
+            android:textSize="35sp"
+            android:layout_below="@+id/timer_textview_label"
+            android:layout_centerHorizontal="true"
+            android:layout_width="50dp"
+            android:layout_height="wrap_content"/>
+    </RelativeLayout>
 
-    <!-- Score -->
-    <TextView
-        android:id="@+id/score_textview"
-        android:textSize="35sp"
-        android:layout_width="100dp"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/score_textview_label"
-        android:layout_marginLeft="270dp"
-        android:layout_marginStart="270dp" />
+    <!-- Score layout -->
+    <RelativeLayout
+        android:id="@+id/score_layout"
+        android:layout_width="75dp"
+        android:layout_height="75dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginEnd="10dp">
+
+        <!-- Score label -->
+        <TextView
+            android:id="@+id/score_textview_label"
+            android:textSize="18sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/score_string"
+            android:layout_centerHorizontal="true"/>
+
+        <!-- Score value-->
+        <TextView
+            android:id="@+id/score_textview"
+            android:gravity="center_horizontal"
+            android:textSize="35sp"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:text="@string/zero"
+            android:layout_below="@id/score_textview_label"/>
+    </RelativeLayout>
 
     <LinearLayout
         android:id="@+id/answerTextViewsLayout"
@@ -190,7 +205,7 @@
         android:layout_marginTop="120dp"
         android:layout_width="300dp"
         android:layout_height="375dp"
-        android:background="@drawable/light_red_bg">
+        android:background="@drawable/light_red_transparent_bg">
 
         <!-- Game over label -->
         <TextView
@@ -241,23 +256,34 @@
     <RelativeLayout
         android:id="@+id/pause_screen_layout"
         android:orientation="vertical"
-        android:visibility="invisible"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="250dp"
         android:layout_width="130dp"
-        android:layout_height="100dp"
-        android:background="@drawable/very_light_grey_bg">
+        android:layout_height="200dp"
+        android:background="@drawable/very_light_grey_bg"
+        android:visibility="gone">
 
         <!-- resume button -->
         <Button
             android:id="@+id/resume_button"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="50dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="40dp"
             android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true"
             android:gravity="center"
             android:text="@string/resume"
+            android:background="@drawable/very_light_grey_bg"/>
+
+        <!-- menu button -->
+        <Button
+            android:id="@+id/menu_button_at_pause"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_below="@+id/resume_button"
+            android:layout_marginTop="20dp"
+            android:layout_centerHorizontal="true"
+            android:gravity="center"
+            android:text="@string/menu_string"
             android:background="@drawable/very_light_grey_bg"/>
 
     </RelativeLayout>

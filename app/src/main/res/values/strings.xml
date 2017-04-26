@@ -27,4 +27,6 @@
     <string name="preferences_scores">Scores</string>
     <string name="pause">Pause</string>
     <string name="resume">Resume</string>
+    <string name="how_to_play_desc">image_displaying_how_to_play_the_game</string>
+    <string name="zero">0</string>
 </resources>

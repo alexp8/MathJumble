@@ -1,23 +1,24 @@
 package alexp8.model;
 
 /**
+ * Subtract class child of AbstractOperation.
+ * Holds data for scores, difficulty increases, and variable calculation for subtraction problems.
  * Created by Cave Bois on 3/29/2017.
  */
-
 public class Subtract extends AbstractOperation {
 
-    private static final int[] EASY = {10, 5};
-    private static final int[] NORMAL = {10, 5};
-    private static final int[] HARD = {10, 5};
+    /**3 arrays holding min increase and max increase per problem solved*/
+    private static final int[] EASY_DIFFICULTY = {10, 5};
+    private static final int[] NORMAL_DIFFICULTY = {10, 5};
+    private static final int[] HARD_DIFFICULTY = {10, 5};
 
     private static final int MINIMUM = 3;
-
-    /** */
+    
     private static final int SCORE_BONUS = 50;
     private static final String LABEL = "-";
 
     public Subtract(final String the_difficulty) {
-        super(SCORE_BONUS, LABEL, the_difficulty, EASY, NORMAL, HARD);
+        super(SCORE_BONUS, LABEL, the_difficulty, EASY_DIFFICULTY, NORMAL_DIFFICULTY, HARD_DIFFICULTY);
     }
 
     /**

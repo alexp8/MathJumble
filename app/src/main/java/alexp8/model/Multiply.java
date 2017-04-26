@@ -1,6 +1,8 @@
 package alexp8.model;
 
 /**
+ * Multiply class child of AbstractOperation.
+ * Holds data for scores, difficulty increases, and variable calculation for multiplication problems.
  * Created by Alex Peterson on 3/29/2017.
  */
 public class Multiply extends AbstractOperation {

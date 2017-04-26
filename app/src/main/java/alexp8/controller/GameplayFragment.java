@@ -2,10 +2,8 @@ package alexp8.controller;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
+import android.graphics.Color;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -14,61 +12,54 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.alexp8.mathjumble.R;
-import com.google.android.gms.games.Games;
-import com.google.android.gms.vision.text.Text;
 
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Random;
 import java.util.Set;
 
-import alexp8.model.MathJumble;
-
 /**
- *
- *
+ * Fragment handling the game UI.
  */
 public class GameplayFragment extends Fragment {
 
     private Listener my_listener = null;
-    private GamePlayListener myGamePlayListener;
     private Activity myActivity;
 
     private int[] buttons;
     private int[] textviews;
+    private String my_time = "";
+    private Button my_last_button, my_correct_button;
 
     public interface Listener {
         void answerButtonClick(String value);
         void playAgain();
         void menu();
         void nextProblem();
-        boolean inGame();
-        void setInGame(boolean b);
         void pause();
         void resume();
+        void quit();
+        void setPaused(boolean b);
+        boolean inGame();
+        void setInGame(boolean b);
     }
 
     public void setListener(Listener listener) {
         my_listener = listener;
     }
 
-    public GameplayFragment() {
-
-    }
+    public GameplayFragment() {}
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         final View v = inflater.inflate(R.layout.fragment_gameplay, container, false);
-        myGamePlayListener = new GamePlayListener();
+        final GamePlayListener myGamePlayListener = new GamePlayListener();
 
         buttons = new int[]{
                 R.id.a1_button, R.id.a2_button, R.id.a3_button, R.id.pause_button,
                 R.id.menu_button, R.id.play_again_button,
-                R.id.resume_button
+                R.id.resume_button, R.id.menu_button_at_pause
         };
 
         textviews = new int[]{
@@ -86,12 +77,10 @@ public class GameplayFragment extends Fragment {
     public void onStart() {
         super.onStart();
 
-        //begin the game
-        if (!my_listener.inGame()) {
-            my_listener.nextProblem();
+        if (!my_listener.inGame()) { //start the game if one isn't currently going
             my_listener.setInGame(true);
+            my_listener.nextProblem();
         }
-
     }
 
     @Override
@@ -102,7 +91,11 @@ public class GameplayFragment extends Fragment {
             myActivity = (Activity) context;
     }
 
-    public void gameOver(boolean game_over) {
+    /**
+     * Helper method that displays game over screen on game over.
+     * @param game_over visible or invisible
+     */
+    public void gameOver(final boolean game_over) {
         final RelativeLayout gameOverLayout = (RelativeLayout) myActivity.findViewById(R.id.game_over_layout);
         if (game_over) {
             flipActiveViews(0.5, false);
@@ -113,30 +106,38 @@ public class GameplayFragment extends Fragment {
         }
     }
 
-    public void gameOver(final String score, boolean game_over) {
+    /**
+     * Display the information when the game ends: score and prompts.
+     * @param score of user
+     * @param game_over true or false for sub-method
+     */
+    public void gameOver(final String score, final boolean game_over) {
 
         final TextView game_over_score = (TextView) myActivity.findViewById(R.id.game_over_score_textview);
         final String score_text = "Score " + score;
         game_over_score.setText(score_text);
+
+        my_last_button.setBackgroundResource(R.drawable.red_bg);
+        my_correct_button.setBackgroundResource(R.drawable.light_green_bg);
+        my_last_button.setTextColor(Color.WHITE);
 
         gameOver(game_over);
     }
 
     /**
      * Update the variables.
-     *
-     * @param variables
-     * @param operation
      */
-    public void updateTextViews(final int[] variables, final String operation, final int unknown_i) {
+    public void updateTextViews(int[] variables, String operation, int unknown_i, long the_time) {
 
         if (myActivity == null) {
             Log.e("onupdate", "activity is null");
             return;
         }
 
-        TextView op_textview = (TextView) myActivity.findViewById(R.id.operation_textview);
+        final TextView op_textview = (TextView) myActivity.findViewById(R.id.operation_textview);
         op_textview.setText(operation);
+        ((TextView) myActivity.findViewById(R.id.timer_textview)).setText(String.valueOf(the_time));
+
 
         for (int i = 0; i < textviews.length; i++) {
             final TextView tv =  ((TextView) myActivity.findViewById(textviews[i]));
@@ -148,22 +149,20 @@ public class GameplayFragment extends Fragment {
 
             tv.setText(text);
         }
+        my_correct_button = (Button) myActivity.findViewById(buttons[unknown_i]);
     }
 
     /**
      * Update the text values on the buttons
-     * @param set of int values for the buttons to show
      */
-    public void updateButtons(final Set<Integer> set) {
-        final Iterator iterator = set.iterator();
+    public void updateButtons(final String[] answers) {
 
         //only set text for the answer buttons
         for (int i = 0; i < 3; i++) {
             final Button button = (Button) myActivity.findViewById(buttons[i]);
-            button.setText(String.valueOf(iterator.next()));
+            button.setText(answers[i]);
         }
     }
-
 
     public void updateTimer(String the_time) {
         final TextView timer_textview = (TextView) myActivity.findViewById(R.id.timer_textview);
@@ -171,8 +170,8 @@ public class GameplayFragment extends Fragment {
     }
 
     /**
-     *
-     * @param the_score
+     * Update the user's score.
+     * @param the_score of game
      */
     public void updateScore(final String the_score) {
         final TextView score_tv = (TextView) myActivity.findViewById(R.id.score_textview);
@@ -205,26 +204,40 @@ public class GameplayFragment extends Fragment {
         myActivity.findViewById(R.id.timer_textview_label).setAlpha((float) value);
     }
 
+    /**
+     * Private listener class handling button clicks.
+     */
     private class GamePlayListener implements View.OnClickListener {
-
         @Override
         public void onClick(View v) {
             switch (v.getId()) {
                 case R.id.menu_button:
                     my_listener.menu();
                     break;
+                case R.id.menu_button_at_pause:
+                    my_listener.setPaused(true);
+                    my_listener.quit();
+                    my_listener.menu();
+                    break;
                 case R.id.play_again_button:
+                    my_last_button.setBackgroundResource(R.drawable.light_orange_bg);
+                    my_correct_button.setBackgroundResource(R.drawable.light_orange_bg);
+                    my_last_button.setTextColor(Color.BLACK);
+                    my_listener.setInGame(true);
                     gameOver(false);
                     my_listener.playAgain();
                     break;
                 case R.id.a1_button:
-                    my_listener.answerButtonClick(((TextView)myActivity.findViewById(R.id.a1_button)).getText().toString());
+                    my_last_button = ((Button) myActivity.findViewById(R.id.a1_button));
+                    my_listener.answerButtonClick(my_last_button.getText().toString());
                     break;
                 case R.id.a2_button:
-                    my_listener.answerButtonClick(((TextView)myActivity.findViewById(R.id.a2_button)).getText().toString());
+                    my_last_button = ((Button) myActivity.findViewById(R.id.a2_button));
+                    my_listener.answerButtonClick(my_last_button.getText().toString());
                     break;
                 case R.id.a3_button:
-                    my_listener.answerButtonClick(((TextView)myActivity.findViewById(R.id.a3_button)).getText().toString());
+                    my_last_button = ((Button) myActivity.findViewById(R.id.a3_button));
+                    my_listener.answerButtonClick(my_last_button.getText().toString());
                     break;
                 case R.id.pause_button:
                     my_listener.pause();
@@ -232,6 +245,7 @@ public class GameplayFragment extends Fragment {
                     myActivity.findViewById(R.id.pause_screen_layout).setVisibility(View.VISIBLE);
                     break;
                 case R.id.resume_button:
+                    my_listener.setPaused(false);
                     my_listener.resume();
                     flipActiveViews(1, true);
                     myActivity.findViewById(R.id.pause_screen_layout).setVisibility(View.GONE);

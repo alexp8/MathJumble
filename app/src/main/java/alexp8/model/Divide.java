@@ -1,9 +1,10 @@
 package alexp8.model;
 
 /**
+ * Divide class child of AbstractOperation.
+ * Holds data for scores, difficulty increases, and variable calculation for division problems.
  * Created by Cave Bois on 3/29/2017.
  */
-
 public class Divide extends AbstractOperation {
 
     private static final int[] EASY = {3, 2};

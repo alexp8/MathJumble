@@ -1,30 +1,16 @@
 package alexp8.controller;
 
-import android.app.AlertDialog;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.graphics.drawable.Icon;
 import android.os.CountDownTimer;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.view.Window;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
-import com.google.android.gms.*;
 import com.google.android.gms.auth.api.Auth;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
@@ -32,16 +18,18 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.games.Games;
-import com.google.example.games.basegameutils.BaseGameUtils;
 import com.example.alexp8.mathjumble.R;
 
-import com.flurry.android.FlurryAgent;
-
-import java.util.Random;
+import java.util.Iterator;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import alexp8.model.MathJumble;
 
+/**
+ * Main activity handling Google sign-in, fragment transitions, and run the game.
+ */
 public class MainActivity extends AppCompatActivity implements
         GoogleApiClient.OnConnectionFailedListener, MainMenuFragment.Listener, GameplayFragment.Listener {
 
@@ -51,28 +39,24 @@ public class MainActivity extends AppCompatActivity implements
 
     private static final long THIRTY_SIX_HOURS = 1000 * 60 * 60 * 36;
     private GoogleApiClient myGoogleApiClient;
-    private GoogleSignInOptions myGoogleSignInOptions;
     private static int RC_SIGN_IN = 9001;
-    private static int RC_UNUSED = 5001;
+    private static int RC_SCOREBOARD = 5001;
 
     private GameplayFragment myGameplayFragment;
     private MainMenuFragment myMainMenuFragment;
 
     //time in milliseconds for game to be played (15 seconds)
     private static final long START_TIME = 15 * 1000;
-    private static final int ONE_SECOND = 1000;
+    private static final int ONE_SECOND = 1000, ONE_TENTH_SECOND = 100;
 
-    private long my_time;
-    private Random rand = new Random();
-
-    private int a = 0, b = 0, c = 0, answer = 0;
-    private CountDownTimer my_timer;
-    private String my_difficulty, my_leaderboard_id, my_name, my_img_url;
-    private boolean in_game = false;
-    private boolean paused = false;
+    private long my_time, my_resume_time, my_pause_time;
+    private String my_difficulty = "", my_leaderboard_id, my_name, my_img_url;
+    /**in_game for when a user has a game going, paused if the user hit pause*/
+    private boolean in_game = false, paused = false;
 
     private MathJumble my_jumble;
-    private long pause_time;
+    private CountDownTimer my_timer;
+    private int tick = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements
         myMainMenuFragment.setListener(this);
         myGameplayFragment.setListener(this);
 
-        myGoogleSignInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+        final GoogleSignInOptions myGoogleSignInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
                 .build();
 
@@ -97,15 +81,40 @@ public class MainActivity extends AppCompatActivity implements
                 .addApi(Games.API).addScope(Games.SCOPE_GAMES)
                 .build();
 
-        /*
-        new FlurryAgent.Builder()
-                .withLogEnabled(true)
-                .build(this, "TKFQ6GDYM5GR67BCKJSK");
-        */
         signIn();
-        getSupportFragmentManager().beginTransaction().add(R.id.fragment_container,
-                myMainMenuFragment).commit();
+        setUpTimer();
+    }
 
+    /**
+     * Set up the timer to tick every second.
+     * Check if the user has run out of time.
+     */
+    private void setUpTimer() {
+        my_timer = new CountDownTimer(THIRTY_SIX_HOURS, ONE_TENTH_SECOND) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+
+                if (tick % 10 == 0) {
+
+                    if (in_game) {
+                        my_time -= 1000;
+                        if (myGameplayFragment.isAdded())
+                            myGameplayFragment.updateTimer(String.valueOf(my_time / 1000));
+                        if (my_time < 100) //round to tenth of a second
+                            lose();
+                    }
+
+                    Log.d("MathJumble", "ticking " + my_time);
+                }
+
+                tick++;
+            }
+
+            @Override
+            public void onFinish() {
+
+            }
+        };
     }
 
     /**
@@ -114,40 +123,32 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onStart() {
         super.onStart();
-        Log.d("MathJumble", "onStart(): connecting");
         myGoogleApiClient.connect();
+
+        if (!myMainMenuFragment.isAdded() && !in_game) {
+            getSupportFragmentManager().beginTransaction().add(R.id.fragment_container,
+                    myMainMenuFragment).commit();
+        }
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        Log.d("MathJumble", "onStop(): disconnecting");
-        if (myGoogleApiClient.isConnected()) {
-            myGoogleApiClient.disconnect();
-        }
     }
 
+    /**
+     * If app is interrupted, pause game
+     */
     @Override
     public void onPause() {
-        if (my_timer != null) pause();
+        pause();
         super.onPause();
     }
 
     @Override
     public void onResume() {
-        if (my_timer != null) resume();
+        if (!paused) resume();
         super.onResume();
-    }
-
-    /**
-     * Display the leaderboards to the user.
-     */
-    public void displayLeaderboards() {
-        if (signedIn())
-            startActivityForResult(Games.Leaderboards.getAllLeaderboardsIntent(myGoogleApiClient),
-                    RC_UNUSED);
-        else
-            BaseGameUtils.makeSimpleDialog(this, getString(R.string.leaderboards_not_available)).show();
     }
 
     public boolean signedIn() {
@@ -155,9 +156,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     public String getName() {return my_name;}
-    public boolean inGame() {return in_game;}
     public String getImgUrl() {return my_img_url;}
-    public void setInGame(boolean in_game) {this.in_game = in_game;}
 
     /**
      * Sign in the User.
@@ -185,30 +184,59 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     /**
+     * Display the leaderboards to the user.
+     */
+    public void displayLeaderboards() {
+        startActivityForResult(Games.Leaderboards.getAllLeaderboardsIntent(myGoogleApiClient),
+                RC_SCOREBOARD);
+    }
+
+    /**
      * Handle the user attempting to sign in.
-     * @param requestCode
-     * @param resultCode
-     * @param intent
+     * @param requestCode of activity
+     * @param resultCode of activity
+     * @param intent of activity
      */
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
 
-        if (requestCode == RC_SIGN_IN) {
+        if (requestCode == RC_SIGN_IN) { //attempting to sign in
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(intent);
 
             if (result.isSuccess()) {
+                Log.d("MathJumble", "Mainactivity signIn(): successfully signed in user");
                 myGoogleApiClient.connect();
 
-                my_name = result.getSignInAccount().getDisplayName().toString();
+                my_name = result.getSignInAccount().getDisplayName();
                 my_img_url = result.getSignInAccount().getPhotoUrl().toString();
 
                 myMainMenuFragment.displaySignedIn(true);
             } else {
-                BaseGameUtils.showActivityResultError(this,
-                        requestCode, resultCode, R.string.signin_failure);
+                Log.d("MathJumble", "Mainactivity signIn(): unable to sign in user");
+                if (myGoogleApiClient.isConnected())
+                    myGoogleApiClient.disconnect();
+                Toast.makeText(this, R.string.signin_failure, Toast.LENGTH_SHORT).show();
             }
-        } else {
+        } else if (requestCode == RC_SCOREBOARD) {
+            if (!signedIn())
+                Toast.makeText(this, R.string.leaderboards_not_available, Toast.LENGTH_SHORT).show();
 
+        }
+    }
+
+    private void setLeaderboardID(final String the_difficulty) {
+        switch (the_difficulty) {
+            case "Normal":
+                my_leaderboard_id = NORMAL_LEADERBOARD_ID;
+                break;
+            case "Hard":
+                my_leaderboard_id = HARD_LEADERBOARD_ID;
+                break;
+            case "Easy":
+                my_leaderboard_id = EASY_LEADERBOARD_ID;
+                break;
+            default:
+                break;
         }
     }
 
@@ -217,63 +245,43 @@ public class MainActivity extends AppCompatActivity implements
      * @param the_difficulty of game
      */
     public void playGame(final String the_difficulty) {
-        my_difficulty = the_difficulty;
-        my_jumble = new MathJumble(the_difficulty);
-        switchToFragment(myGameplayFragment);
-
-        switch (my_difficulty) {
-            case "Normal":
-                my_leaderboard_id = NORMAL_LEADERBOARD_ID;
-                break;
-            case "Hard":
-                my_leaderboard_id = HARD_LEADERBOARD_ID;
-                break;
-            default:
-                my_leaderboard_id = EASY_LEADERBOARD_ID;
-                break;
-        }
+        my_time = START_TIME; //reset time
         startTimer();
-    }
 
-    /**
-     *
-     */
-    public void howToPlay() {
+        if (!my_difficulty.equals(the_difficulty)) {
+            my_difficulty = the_difficulty;
+            setLeaderboardID(the_difficulty);
+        }
 
+        my_jumble = new MathJumble(my_difficulty);
+
+        if (!myGameplayFragment.isAdded()) switchToFragment(myGameplayFragment);
     }
 
     /**
      * Create the next problem to be solved and display it on the screen.
      */
     public void nextProblem() {
+        Log.d("MathJumble", "next problem");
         my_jumble.nextProblem();
         final int[] variables = my_jumble.getVariables();
-        final Set<Integer> answers = my_jumble.getAnswers();
+        final Iterator iterator = my_jumble.getAnswers().iterator();
+        final String[] answers = new String[3];
 
-        myGameplayFragment.updateTextViews(variables, my_jumble.getOperationText(), my_jumble.getUnknownIndex());
+        answers[0] = String.valueOf(iterator.next());
+        answers[1] = String.valueOf(iterator.next());
+        answers[2]= String.valueOf(iterator.next());
+
+        myGameplayFragment.updateTextViews(variables, my_jumble.getOperationText(), my_jumble.getUnknownIndex(), my_time);
         myGameplayFragment.updateButtons(answers);
     }
 
-    private void startTimer() {
-        my_time = START_TIME;
-        my_timer = new CountDownTimer(THIRTY_SIX_HOURS, ONE_SECOND) { //game will not run longer than 36 hours ;)
-            public void onTick(long milliSeconds) {
-                my_time -= 1000;
-                myGameplayFragment.updateTimer(String.valueOf(my_time / 1000));
-
-                if (my_time == 0) {
-                    lose();
-                }
-            }
-            public void onFinish() {
-                myGameplayFragment.updateTimer(String.valueOf(0));
-                lose();
-            }
-        }.start();
-    }
-
+    /**
+     * Check if the user correctly solved the problem.
+     * @param value of the answer button
+     */
     @Override
-    public void answerButtonClick(String value) {
+    public void answerButtonClick(final String value) {
         if (value == null || value.equals("")) return;
 
         final int answer = Integer.valueOf(value);
@@ -284,64 +292,109 @@ public class MainActivity extends AppCompatActivity implements
             my_time += my_jumble.getTimerIncrease();
             myGameplayFragment.updateScore(String.valueOf(my_jumble.getScore()));
             myGameplayFragment.updateTimer(String.valueOf(my_time / 1000));
-        }
-        else
+        } else {
             lose();
+        }
     }
 
 
     /**
-     *
+     * End the game, display game over screen, submit their score.
      */
     private void lose() {
+        pauseTimer();
 
-        my_timer.cancel();
-
-        //submit the score otherwise store locally
-        if (signedIn()) {
-            Games.Leaderboards.submitScore(myGoogleApiClient, my_leaderboard_id,  my_jumble.getScore());
-        }
+        submitScore();
 
         final String score = String.valueOf(my_jumble.getScore());
         myGameplayFragment.gameOver(score, true);
     }
 
+    private void submitScore() {
+        //submit the score otherwise store locally
+        if (signedIn()) {
+            Games.Leaderboards.submitScore(myGoogleApiClient, my_leaderboard_id,  my_jumble.getScore());
+        } else {
+            Log.d("MathJumble", "unable to submit score");
+        }
+    }
+
+    /**
+     * On game over screen, user hits play again to start a new game same difficulty.
+     */
     @Override
     public void playAgain() {
-        my_jumble = new MathJumble(my_difficulty);
-        startTimer(); //reset and start timer
-        nextProblem(); //display next problem
+        playGame(my_difficulty);
+        my_time += 1000;
+        nextProblem();
     }
 
-    @Override
-    public void menu() {
-        in_game = false;
-        switchToFragment(myMainMenuFragment);
-    }
-
-
-    /**
-     * Pause the game.
-     */
-    public void pause() {
-        paused = true;
-        my_timer.cancel();
-
-    }
-
-    /**
-     * Resume the game.
-     */
-    public void resume() {
-        paused = false;
+    private void startTimer() {
         my_timer.start();
     }
 
+    private void pauseTimer() {
+        my_timer.cancel();
+    }
+
     /**
-     *
-     * @param newFrag
+     * User during game hits pause screen, hits menu.
      */
-    private void switchToFragment(Fragment newFrag) {
+    public void quit() {
+        pauseTimer();
+        menu();
+    }
+
+    /**
+     * Switch to main menu.
+     */
+    @Override
+    public void menu() {
+        switchToFragment(myMainMenuFragment);
+    }
+
+    public void setPaused(boolean paused) {this.paused = paused;}
+
+    @Override
+    public boolean inGame() {
+        return in_game;
+    }
+
+    @Override
+    public void setInGame(boolean in_game) {
+        this.in_game = in_game;
+    }
+
+    /*** Pause the game.*/
+    public void pause() {
+        if (in_game) {
+            pauseTimer();
+            long cur_time = System.currentTimeMillis();
+            Log.d("MathJumble", "paused at " + cur_time);
+            my_pause_time = cur_time % 1000;
+        }
+    }
+
+    /*** Resume the game.*/
+    public void resume() {
+        if (in_game) {
+            long cur_time = System.currentTimeMillis();
+            Log.d("MathJumble", "resumed at " + cur_time);
+            my_resume_time = cur_time % 1000;
+
+            long delay_time = my_resume_time - my_pause_time;
+            Log.d("MathJumble", "delay time: " + delay_time);
+            my_time += (long) Math.abs(delay_time);
+
+            startTimer();
+        }
+    }
+
+    /**
+     * Switch from gameplay to menu or vice versa.
+     * @param newFrag to switch to
+     */
+    private void switchToFragment(final Fragment newFrag) {
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, newFrag)
                 .commit();
     }

@@ -1,6 +1,8 @@
 package alexp8.model;
 
 /**
+ * Add class child of AbstractOperation.
+ * Holds data for scores, difficulty increases, and variable calculation for addition problems.
  * Created by Alex Peterson on 3/23/2017.
  */
 public class Add extends AbstractOperation {

@@ -7,7 +7,6 @@ import java.util.Set;
 /**
  * Created by Alex Peterson on 3/23/2017.
  */
-
 public abstract class AbstractOperation implements Operation {
 
     protected int my_answer = 0, cur_max, my_unknown_index = 0, my_score_bonus,
@@ -67,7 +66,6 @@ public abstract class AbstractOperation implements Operation {
     /**
      * Abstract method to be overridden by child classes.
      * @param vars fill an array with 3 numbers for the problem
-     * @return the answer to the created problem
      */
     protected abstract void calculateVariables(int[] vars);
 
@@ -88,8 +86,7 @@ public abstract class AbstractOperation implements Operation {
     }
 
     /**
-     *
-     * @return an array of 2 "random" numbers with each number being close to the real answer of the current problem
+     * Calculate 2 fake answers, fake answers close to real answer.
      */
     private void calculateFakeAnswers() {
         for (int i = 0; i < 2; i++) {
