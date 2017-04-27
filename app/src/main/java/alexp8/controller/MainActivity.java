@@ -1,6 +1,7 @@
 package alexp8.controller;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.CountDownTimer;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
@@ -11,19 +12,18 @@ import android.view.Window;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.OptionalPendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.games.Games;
 import com.example.alexp8.mathjumble.R;
 
 import java.util.Iterator;
-import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import alexp8.model.MathJumble;
 
@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity implements
             HARD_LEADERBOARD_ID = "CgkIpYejmpQaEAIQBA";
 
     private static final long THIRTY_SIX_HOURS = 1000 * 60 * 60 * 36;
+    private static final String MY_PREFS_NAME = "Math Jumble Preferences";
     private GoogleApiClient myGoogleApiClient;
     private static int RC_SIGN_IN = 9001;
     private static int RC_SCOREBOARD = 5001;
@@ -47,22 +48,24 @@ public class MainActivity extends AppCompatActivity implements
 
     //time in milliseconds for game to be played (15 seconds)
     private static final long START_TIME = 15 * 1000;
-    private static final int ONE_SECOND = 1000, ONE_TENTH_SECOND = 100;
+    private static final int ONE_TENTH_SECOND = 100;
 
-    private long my_time, my_resume_time, my_pause_time;
+    private long my_time;
     private String my_difficulty = "", my_leaderboard_id, my_name, my_img_url;
 
-     /** 
-      *  in_game = true for when a user is on game screen,
-      *  in_game can be true while game_is_going false.
-      *  game_is_going = false if user lost or hit pause
-      */
+    private SharedPreferences prefs;
+    private SharedPreferences.Editor editor;
+
+    /**
+     *  in_game = true for when a user is on game screen,
+     *  in_game can be true while game_is_going false.
+     *  game_is_going = false if user lost or hit pause
+     */
     private boolean in_game = false, game_is_going = false;
 
     private MathJumble my_jumble;
     private CountDownTimer my_timer;
     private int tick = 0;
-    private String my_email;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,25 +73,82 @@ public class MainActivity extends AppCompatActivity implements
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_main);
 
+        prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
+        editor = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).edit();
+        editor.putString("signed in", "false");
+        editor.apply();
+
         myMainMenuFragment = new MainMenuFragment();
         myGameplayFragment = new GameplayFragment();
 
         myMainMenuFragment.setListener(this);
         myGameplayFragment.setListener(this);
 
-        final GoogleSignInOptions myGoogleSignInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+        final GoogleSignInOptions googleSignInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
                 .build();
 
         myGoogleApiClient = new GoogleApiClient.Builder(this)
                 .enableAutoManage(this, this)
-                .addApi(Auth.GOOGLE_SIGN_IN_API, myGoogleSignInOptions)
-                .addOnConnectionFailedListener(this)
+                .addApi(Auth.GOOGLE_SIGN_IN_API, googleSignInOptions)
                 .addApi(Games.API).addScope(Games.SCOPE_GAMES)
                 .build();
 
-        signIn();
+        silentSignIn();
         setUpTimer();
+    }
+
+    /**
+     * Sign in the user on start.
+     */
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        if (!myMainMenuFragment.isAdded() && !in_game) {
+            getSupportFragmentManager().beginTransaction().add(R.id.fragment_container,
+                    myMainMenuFragment).commit();
+        }
+    }
+
+    /**Silently sign in user.*/
+    private void silentSignIn() {
+        OptionalPendingResult<GoogleSignInResult> pendingResult =
+                Auth.GoogleSignInApi.silentSignIn(myGoogleApiClient);
+
+        if (pendingResult.isDone()) {
+            GoogleSignInResult result = pendingResult.get();
+            handleSignInResult(result);
+        } else {
+            pendingResult.setResultCallback(new ResultCallback<GoogleSignInResult>() {
+                @Override
+                public void onResult(@NonNull GoogleSignInResult result) {
+                    handleSignInResult(result);
+                }
+            });
+        }
+    }
+
+    /**
+     * Grab the user's info if they signed in successfully.
+     * Tell the user sign in failure.
+     */
+    private boolean handleSignInResult(GoogleSignInResult result) {
+        if (result.isSuccess()) {
+            Log.d("MathJumble", "Mainactivity signIn(): successfully signed in user");
+            editor.putString("signed in", "true");
+            editor.apply();
+
+            final GoogleSignInAccount acct = result.getSignInAccount();
+
+            my_name = acct.getDisplayName();
+            my_img_url = acct.getPhotoUrl().toString();
+
+            if (myMainMenuFragment.isAdded()) myMainMenuFragment.displaySignedIn(true);
+            return true;
+        } else {
+           return false;
+        }
     }
 
     /**
@@ -113,7 +173,6 @@ public class MainActivity extends AppCompatActivity implements
                 } else if (!game_is_going) {
                     my_timer.cancel();
                 }
-                Log.d("MathJumble", "ticking " + my_time);
             }
 
             @Override
@@ -121,20 +180,6 @@ public class MainActivity extends AppCompatActivity implements
 
             }
         };
-    }
-
-    /**
-     * Sign in the user on start.
-     */
-    @Override
-    protected void onStart() {
-        super.onStart();
-        myGoogleApiClient.connect();
-
-        if (!myMainMenuFragment.isAdded() && !in_game) {
-            getSupportFragmentManager().beginTransaction().add(R.id.fragment_container,
-                    myMainMenuFragment).commit();
-        }
     }
 
     @Override
@@ -158,7 +203,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     public boolean signedIn() {
-        return (myGoogleApiClient != null && myGoogleApiClient.isConnected());
+        return (prefs.getString("signed in", "").equals("true"));
     }
 
     public String getName() {return my_name;}
@@ -171,8 +216,9 @@ public class MainActivity extends AppCompatActivity implements
             @Override
             public void onResult(@NonNull Status status) {
                 myMainMenuFragment.signOut();
-                myGoogleApiClient.disconnect();
                 Toast.makeText(MainActivity.this, "Warning scores will not be saved when signed out!", Toast.LENGTH_LONG).show();
+                editor.putString("signed in", "false");
+                editor.apply();
             }
         });
     }
@@ -184,14 +230,15 @@ public class MainActivity extends AppCompatActivity implements
 
     /**Sign in the user.*/
     public void signIn() {
-        final Intent intent = Auth.GoogleSignInApi.getSignInIntent(myGoogleApiClient);
-        startActivityForResult(intent, RC_SIGN_IN);
+        final Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(myGoogleApiClient);
+        startActivityForResult(signInIntent, RC_SIGN_IN);
     }
 
     /**
      * Display the leaderboards to the user.
      */
     public void displayLeaderboards() {
+        Log.d("MathJumble", prefs.getString("signed in", ""));
         if (signedIn()) {
             final Intent leaderboard_intent = Games.Leaderboards.getAllLeaderboardsIntent(myGoogleApiClient);
             startActivityForResult(leaderboard_intent, RC_SCOREBOARD);
@@ -207,28 +254,18 @@ public class MainActivity extends AppCompatActivity implements
      * @param intent of activity
      */
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        super.onActivityResult(requestCode, resultCode, intent);
 
         if (requestCode == RC_SIGN_IN) { //attempting to sign in
-            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(intent);
-
-            if (result.isSuccess()) {
-                Log.d("MathJumble", "Mainactivity signIn(): successfully signed in user");
-                myGoogleApiClient.connect();
-
-                my_name = result.getSignInAccount().getDisplayName();
-                my_img_url = result.getSignInAccount().getPhotoUrl().toString();
-                my_email = result.getSignInAccount().getEmail();
-
-                myMainMenuFragment.displaySignedIn(true);
-            } else {
+            final GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(intent);
+            boolean success = handleSignInResult(result);
+            if (!success) {
                 Log.d("MathJumble", "Mainactivity signIn(): unable to sign in user");
-                if (myGoogleApiClient.isConnected())
-                    myGoogleApiClient.disconnect();
+
                 Toast.makeText(this, R.string.signin_failure, Toast.LENGTH_SHORT).show();
             }
         }
     }
+
 
     private void setLeaderboardID(final String the_difficulty) {
         switch (the_difficulty) {
@@ -364,9 +401,6 @@ public class MainActivity extends AppCompatActivity implements
     public void pause() {
         if (in_game) {
             game_is_going = false;
-            long cur_time = System.currentTimeMillis();
-            Log.d("MathJumble", "paused at " + cur_time);
-            my_pause_time = cur_time % 1000; //grab the milliseconds
         }
     }
 
@@ -374,24 +408,12 @@ public class MainActivity extends AppCompatActivity implements
     public void resume() {
         if (in_game) {
             game_is_going = true;
-
             startTimer();
         }
     }
 
     private void startTimer() {
         my_timer.start();
-    }
-
-    /**Email feedback from a user.*/
-    public void sendFeedback(final String message) {
-        Intent email = new Intent(Intent.ACTION_SEND);
-        email.setType("message");
-        email.putExtra(Intent.EXTRA_EMAIL, new String[]{getString(R.string.feedback_email)});
-        email.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.email_subject));
-        email.putExtra(Intent.EXTRA_USER, my_email + "\n");
-        email.putExtra(Intent.EXTRA_TEXT, message);
-        startActivity(Intent.createChooser(email, getString(R.string.title_send_feedback)));
     }
 
     /**

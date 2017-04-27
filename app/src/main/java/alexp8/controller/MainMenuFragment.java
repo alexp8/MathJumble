@@ -30,9 +30,8 @@ public class MainMenuFragment extends Fragment {
     private Listener my_listener = null;
     private Activity myActivity;
 
-    private String my_feedback;
-
     private int[] button_ids;
+
     public interface Listener {
         void signOut();
         void signIn();
@@ -43,7 +42,6 @@ public class MainMenuFragment extends Fragment {
         String getImgUrl();
         boolean inGame();
         void setInGame(boolean b);
-        void sendFeedback(String message);
     }
 
     public void setListener(Listener listener) {
@@ -59,11 +57,10 @@ public class MainMenuFragment extends Fragment {
 
         button_ids = new int[] {
                 R.id.sign_in_button, R.id.play_button,
-                 R.id.sign_out_button, R.id.scores_button,
+                R.id.sign_out_button, R.id.scores_button,
                 R.id.easy_button, R.id.normal_button,
                 R.id.hard_button, R.id.how_to_play_button,
-                R.id.feedback_button, R.id.cancel_feedback_button,
-                R.id.close_how_to_play, R.id.send_feedback_button
+                R.id.close_how_to_play
         };
 
         for (int i : button_ids)
@@ -121,6 +118,7 @@ public class MainMenuFragment extends Fragment {
         final ImageView user_pic = (ImageView) myActivity.findViewById(R.id.user_pic);
         final TextView user_name = (TextView) myActivity.findViewById(R.id.user_name);
         final SignInButton signInButton = (SignInButton) myActivity.findViewById(R.id.sign_in_button);
+        signInButton.setColorScheme(SignInButton.COLOR_AUTO);
         final Button signOutButton= (Button) myActivity.findViewById(R.id.sign_out_button);
 
         if (signedIn) {
@@ -145,20 +143,13 @@ public class MainMenuFragment extends Fragment {
         sb.setEnabled(active);
         sb.setAlpha(active ? FULL : TRANSPARENT);
 
-        for (int i = 1; i < button_ids.length; i++) {
+        for (int i = 1; i < button_ids.length - 1; i++) {
             Button b = (Button) myActivity.findViewById(button_ids[i]);
 
-            if (b.getId() != R.id.close_how_to_play && b.getId() != R.id.cancel_feedback_button
-                    && b.getId() != R.id.send_feedback_button) {
-                b.setEnabled(active);
-                sb.setAlpha(active ? FULL : TRANSPARENT);
-            }
-        }
-    }
 
-    private void showFeedback(boolean show) {
-        final RelativeLayout feedback_layout = (RelativeLayout) myActivity.findViewById(R.id.feedback_layout);
-        feedback_layout.setVisibility(show ? View.VISIBLE : View.GONE);
+            b.setEnabled(active);
+            sb.setAlpha(active ? FULL : TRANSPARENT);
+        }
     }
 
     /**
@@ -179,10 +170,12 @@ public class MainMenuFragment extends Fragment {
                     disableOtherButtons(false);
                     showDifficultyButtons(false);
                     myActivity.findViewById(R.id.HowToPlayLayout).setVisibility(View.VISIBLE);
+                    myActivity.findViewById(R.id.feedback_title_textview).setVisibility(View.VISIBLE);
                     break;
                 case R.id.close_how_to_play:
                     disableOtherButtons(true);
                     myActivity.findViewById(R.id.HowToPlayLayout).setVisibility(View.GONE);
+                    myActivity.findViewById(R.id.feedback_title_textview).setVisibility(View.GONE);
                     break;
                 case R.id.scores_button:
                     my_listener.displayLeaderboards();
@@ -199,29 +192,6 @@ public class MainMenuFragment extends Fragment {
                     break;
                 case R.id.hard_button:
                     my_listener.playGame(getString(R.string.hard_string));
-                    break;
-                case R.id.feedback_button:
-                    if (my_listener.signedIn()){
-                        disableOtherButtons(false);
-                        showFeedback(true);
-                    } else {
-                        Toast.makeText(myActivity, R.string.feedback_failure, Toast.LENGTH_SHORT).show();
-                    }
-                    break;
-                case R.id.cancel_feedback_button:
-                    disableOtherButtons(true);
-                    showFeedback(false);
-                    break;
-                case R.id.send_feedback_button:
-                    final EditText text = (EditText) myActivity.findViewById(R.id.feedback_message);
-
-                    if (my_listener.signedIn() && text.length() > 0)
-                        my_listener.sendFeedback(text.getText().toString());
-                    else
-                        Toast.makeText(myActivity, R.string.send_feedback_failure, Toast.LENGTH_SHORT).show();
-
-                    text.setText("");
-                    showFeedback(false);
                     break;
                 default:
                     break;
