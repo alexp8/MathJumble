@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity implements
 
     private static final long THIRTY_SIX_HOURS = 1000 * 60 * 60 * 36;
     private static final String MY_PREFS_NAME = "Math Jumble Preferences";
-    private GoogleApiClient myGoogleApiClient;
+    private GoogleApiClient myGoogleSignInApiClient, myGoogleGameApiClient;
     private static int RC_SIGN_IN = 9001;
     private static int RC_SCOREBOARD = 5001;
 
@@ -88,11 +88,16 @@ public class MainActivity extends AppCompatActivity implements
                 .requestEmail()
                 .build();
 
-        myGoogleApiClient = new GoogleApiClient.Builder(this)
+        myGoogleSignInApiClient = new GoogleApiClient.Builder(this)
                 .enableAutoManage(this, this)
                 .addApi(Auth.GOOGLE_SIGN_IN_API, googleSignInOptions)
+                .build();
+
+
+        myGoogleGameApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Games.API).addScope(Games.SCOPE_GAMES)
                 .build();
+
 
         silentSignIn();
         setUpTimer();
@@ -114,7 +119,7 @@ public class MainActivity extends AppCompatActivity implements
     /**Silently sign in user.*/
     private void silentSignIn() {
         OptionalPendingResult<GoogleSignInResult> pendingResult =
-                Auth.GoogleSignInApi.silentSignIn(myGoogleApiClient);
+                Auth.GoogleSignInApi.silentSignIn(myGoogleSignInApiClient);
 
         if (pendingResult.isDone()) {
             GoogleSignInResult result = pendingResult.get();
@@ -143,7 +148,8 @@ public class MainActivity extends AppCompatActivity implements
 
             my_name = acct.getDisplayName();
             my_img_url = acct.getPhotoUrl().toString();
-
+            myGoogleGameApiClient.connect();
+            
             if (myMainMenuFragment.isAdded()) myMainMenuFragment.displaySignedIn(true);
             return true;
         } else {
@@ -212,13 +218,14 @@ public class MainActivity extends AppCompatActivity implements
     /**Sign out the user.*/
     public void signOut() {
 
-        Auth.GoogleSignInApi.signOut(myGoogleApiClient).setResultCallback(new ResultCallback<Status>() {
+        Auth.GoogleSignInApi.signOut(myGoogleSignInApiClient).setResultCallback(new ResultCallback<Status>() {
             @Override
             public void onResult(@NonNull Status status) {
                 myMainMenuFragment.signOut();
                 Toast.makeText(MainActivity.this, "Warning scores will not be saved when signed out!", Toast.LENGTH_LONG).show();
                 editor.putString("signed in", "false");
                 editor.apply();
+                myGoogleGameApiClient.disconnect();
             }
         });
     }
@@ -230,7 +237,7 @@ public class MainActivity extends AppCompatActivity implements
 
     /**Sign in the user.*/
     public void signIn() {
-        final Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(myGoogleApiClient);
+        final Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(myGoogleSignInApiClient);
         startActivityForResult(signInIntent, RC_SIGN_IN);
     }
 
@@ -240,7 +247,7 @@ public class MainActivity extends AppCompatActivity implements
     public void displayLeaderboards() {
         Log.d("MathJumble", prefs.getString("signed in", ""));
         if (signedIn()) {
-            final Intent leaderboard_intent = Games.Leaderboards.getAllLeaderboardsIntent(myGoogleApiClient);
+            final Intent leaderboard_intent = Games.Leaderboards.getAllLeaderboardsIntent(myGoogleGameApiClient);
             startActivityForResult(leaderboard_intent, RC_SCOREBOARD);
         } else {
             Toast.makeText(this, R.string.leaderboards_not_available, Toast.LENGTH_SHORT).show();
@@ -356,7 +363,7 @@ public class MainActivity extends AppCompatActivity implements
     private void submitScore() {
         //submit the score otherwise store locally
         if (signedIn()) {
-            Games.Leaderboards.submitScore(myGoogleApiClient, my_leaderboard_id,  my_jumble.getScore());
+            Games.Leaderboards.submitScore(myGoogleGameApiClient, my_leaderboard_id,  my_jumble.getScore());
         } else {
             Log.d("MathJumble", "unable to submit score");
         }
