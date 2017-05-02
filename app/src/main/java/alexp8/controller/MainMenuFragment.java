@@ -8,14 +8,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
 import com.example.alexp8.mathjumble.R;
 import com.google.android.gms.common.SignInButton;
 
@@ -32,16 +27,15 @@ public class MainMenuFragment extends Fragment {
 
     private int[] button_ids;
 
-    public interface Listener {
+    interface Listener {
         void signOut();
         void signIn();
         void playGame(String difficulty);
         void displayLeaderboards();
         boolean signedIn();
-        String getName();
-        String getImgUrl();
         boolean inGame();
         void setInGame(boolean b);
+        String getName();
     }
 
     public void setListener(Listener listener) {
@@ -54,6 +48,8 @@ public class MainMenuFragment extends Fragment {
 
         final View v = inflater.inflate(R.layout.fragment_main_menu, container, false);
         final MenuListener my_click_listener = new MenuListener();
+
+
 
         button_ids = new int[] {
                 R.id.sign_in_button, R.id.play_button,
@@ -85,8 +81,9 @@ public class MainMenuFragment extends Fragment {
     public void onAttach(Context context) {
         super.onAttach(context);
 
-        if (context instanceof Activity)
+        if (context instanceof Activity) {
             myActivity = (Activity) context;
+        }
     }
 
     @Override
@@ -115,40 +112,32 @@ public class MainMenuFragment extends Fragment {
      */
     public void displaySignedIn(final boolean signedIn) {
 
-        final ImageView user_pic = (ImageView) myActivity.findViewById(R.id.user_pic);
-        final TextView user_name = (TextView) myActivity.findViewById(R.id.user_name);
         final SignInButton signInButton = (SignInButton) myActivity.findViewById(R.id.sign_in_button);
         signInButton.setColorScheme(SignInButton.COLOR_AUTO);
         final Button signOutButton= (Button) myActivity.findViewById(R.id.sign_out_button);
 
-        if (signedIn) {
-            signInButton.setVisibility(View.GONE);
-            signOutButton.setVisibility(View.VISIBLE);
-            user_name.setText(my_listener.getName());
-            user_name.setVisibility(View.VISIBLE);
-            Glide.with(this).load(my_listener.getImgUrl()).into(user_pic);
-            user_pic.setVisibility(View.VISIBLE);
-        } else {
-            signInButton.setVisibility(View.VISIBLE);
-            signOutButton.setVisibility(View.GONE);
-            user_name.setVisibility(View.GONE);
-            user_pic.setVisibility(View.GONE);
-        }
+        final TextView name = (TextView) myActivity.findViewById(R.id.user_name);
+        name.setText(my_listener.getName());
+        name.setVisibility(signedIn ? View.VISIBLE : View.GONE);
+
+        signInButton.setVisibility(signedIn ? View.GONE : View.VISIBLE);
+        signOutButton.setVisibility(signedIn ? View.VISIBLE : View.GONE);
     }
 
     /**Disable all other buttons while in how to play mode except close button.*/
-    private void disableOtherButtons(boolean active) {
+    private void howToPlayDisableOtherButtons(boolean active) {
 
         SignInButton sb = (SignInButton) myActivity.findViewById(R.id.sign_in_button);
         sb.setEnabled(active);
         sb.setAlpha(active ? FULL : TRANSPARENT);
 
-        for (int i = 1; i < button_ids.length - 1; i++) {
+        for (int i = 1; i < button_ids.length; i++) {
             Button b = (Button) myActivity.findViewById(button_ids[i]);
 
-
-            b.setEnabled(active);
-            sb.setAlpha(active ? FULL : TRANSPARENT);
+            if (button_ids[i]!=R.id.close_how_to_play) {
+                b.setEnabled(active);
+                sb.setAlpha(active ? FULL : TRANSPARENT);
+            }
         }
     }
 
@@ -167,15 +156,10 @@ public class MainMenuFragment extends Fragment {
                     my_listener.signOut();
                     break;
                 case R.id.how_to_play_button:
-                    disableOtherButtons(false);
-                    showDifficultyButtons(false);
-                    myActivity.findViewById(R.id.HowToPlayLayout).setVisibility(View.VISIBLE);
-                    myActivity.findViewById(R.id.feedback_title_textview).setVisibility(View.VISIBLE);
+                    howToPlay();
                     break;
                 case R.id.close_how_to_play:
-                    disableOtherButtons(true);
-                    myActivity.findViewById(R.id.HowToPlayLayout).setVisibility(View.GONE);
-                    myActivity.findViewById(R.id.feedback_title_textview).setVisibility(View.GONE);
+                    closeHowToPlay();
                     break;
                 case R.id.scores_button:
                     my_listener.displayLeaderboards();
@@ -196,6 +180,19 @@ public class MainMenuFragment extends Fragment {
                 default:
                     break;
             }
+        }
+
+        private void howToPlay() {
+            howToPlayDisableOtherButtons(false);
+            showDifficultyButtons(false);
+            myActivity.findViewById(R.id.HowToPlayLayout).setVisibility(View.VISIBLE);
+            myActivity.findViewById(R.id.feedback_title_textview).setVisibility(View.VISIBLE);
+        }
+
+        private void closeHowToPlay() {
+            howToPlayDisableOtherButtons(true);
+            myActivity.findViewById(R.id.HowToPlayLayout).setVisibility(View.GONE);
+            myActivity.findViewById(R.id.feedback_title_textview).setVisibility(View.GONE);
         }
     }
 }
