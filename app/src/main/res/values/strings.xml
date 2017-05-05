@@ -34,4 +34,6 @@
     <string name="feedback">Send Feedback to: mathjumblefeedback@gmail.com</string>
     <string name="cancel">Cancel</string>
     <string name="x">x</string>
+    <string name="app_title">Math Jumble</string>
+    <string name="Equals">=</string>
 </resources>

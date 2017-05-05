@@ -131,7 +131,7 @@
             android:layout_marginLeft="10dp"
             android:layout_width="wrap_content"
             android:layout_height="30dp"
-            android:text="="/>
+            android:text="@string/Equals"/>
 
         <!-- Right variable tv -->
         <TextView

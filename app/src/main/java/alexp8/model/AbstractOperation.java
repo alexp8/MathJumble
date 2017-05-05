@@ -7,11 +7,12 @@ import java.util.Set;
 /**
  * Created by Alex Peterson on 3/23/2017.
  */
-public abstract class AbstractOperation implements Operation {
+abstract class AbstractOperation implements Operation {
 
-    protected int my_answer = 0, cur_max, my_unknown_index = 0, my_score_bonus,
+    private int my_answer = 0, my_unknown_index = 0, my_score_bonus,
             my_max_increase;
-    protected Random my_rand;
+    int cur_max;
+    Random my_rand;
     private String my_label;
     private int[] my_variables;
     private Set<Integer> my_answers;
@@ -22,7 +23,7 @@ public abstract class AbstractOperation implements Operation {
      * @param the_score_bonus the points rewarded for completing problem type
      * @param the_label the operation string of the current problem
      */
-    public AbstractOperation(final int the_score_bonus, final String the_label, final String the_difficulty,
+    AbstractOperation(final int the_score_bonus, final String the_label, final String the_difficulty,
                              final int[] easy, final int[] normal, final int[] hard) {
 
         my_score_bonus = the_score_bonus;
@@ -30,7 +31,7 @@ public abstract class AbstractOperation implements Operation {
 
         my_variables = new int[3];
         my_rand = new Random();
-        my_answers = new HashSet<Integer>();
+        my_answers = new HashSet<>();
 
         switch (the_difficulty) {
             case "Easy":
@@ -90,7 +91,7 @@ public abstract class AbstractOperation implements Operation {
      */
     private void calculateFakeAnswers() {
         for (int i = 0; i < 2; i++) {
-            int fake_answer = 0;
+            int fake_answer;
             do {
                 //calculate how close the fake answer will be to the real one
                 int rand_difference = my_rand.nextInt(my_rand.nextInt(5) + 1) + 1;

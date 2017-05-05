@@ -1,27 +1,26 @@
 package alexp8.controller;
 
+import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.CountDownTimer;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Window;
 import android.widget.Toast;
 
-import com.google.android.gms.auth.api.Auth;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.OptionalPendingResult;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.games.Games;
 import com.example.alexp8.mathjumble.R;
+import com.google.example.games.basegameutils.BaseGameUtils;
 
 import java.util.Iterator;
 
@@ -31,30 +30,31 @@ import alexp8.model.MathJumble;
  * Main activity handling Google sign-in, fragment transitions, and run the game.
  */
 public class MainActivity extends AppCompatActivity implements
-        GoogleApiClient.OnConnectionFailedListener, MainMenuFragment.Listener, GameplayFragment.Listener {
+        GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks,
+        MainMenuFragment.Listener, GameplayFragment.Listener {
 
     private static final String EASY_LEADERBOARD_ID = "CgkIpYejmpQaEAIQAg",
             NORMAL_LEADERBOARD_ID ="CgkIpYejmpQaEAIQAw",
             HARD_LEADERBOARD_ID = "CgkIpYejmpQaEAIQBA";
 
-    private static final long THIRTY_SIX_HOURS = 1000 * 60 * 60 * 36;
+    private static final long MAX_GAME_LENGTH = 1000 * 60 * 60 * 36; //36 hours
     private static final String MY_PREFS_NAME = "Math Jumble Preferences";
-    private GoogleApiClient myGoogleSignInApiClient, myGoogleGameApiClient;
+    private static final String TAG = "MathJumble";
+    private static final int ACCESS_DENIED = 888, ACCESS_GRANTED = 889;
+    private static final int MY_PERMISSION_ACCESS_ACC_NAME = ACCESS_DENIED;
+    private GoogleApiClient myGoogleApiClient;
     private static int RC_SIGN_IN = 9001;
     private static int RC_SCOREBOARD = 5001;
 
     private GameplayFragment myGameplayFragment;
     private MainMenuFragment myMainMenuFragment;
 
-    //time in milliseconds for game to be played (15 seconds)
-    private static final long START_TIME = 15 * 1000;
+    //time in milliseconds for game to be played (20 seconds)
+    private static final long START_TIME = 20 * 1000;
     private static final int ONE_TENTH_SECOND = 100;
 
     private long my_time;
     private String my_difficulty = "", my_leaderboard_id, my_name, my_img_url;
-
-    private SharedPreferences prefs;
-    private SharedPreferences.Editor editor;
 
     /**
      *  in_game = true for when a user is on game screen,
@@ -66,6 +66,7 @@ public class MainActivity extends AppCompatActivity implements
     private MathJumble my_jumble;
     private CountDownTimer my_timer;
     private int tick = 0;
+    private boolean mySignInClicked = false, myResolvingConnectionFailure = false, myAutoStartSignInFlow = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,33 +74,38 @@ public class MainActivity extends AppCompatActivity implements
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_main);
 
-        prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
-        editor = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).edit();
-        editor.putString("signed in", "false");
-        editor.apply();
-
         myMainMenuFragment = new MainMenuFragment();
         myGameplayFragment = new GameplayFragment();
 
         myMainMenuFragment.setListener(this);
         myGameplayFragment.setListener(this);
 
-        final GoogleSignInOptions googleSignInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail()
-                .build();
-
-        myGoogleSignInApiClient = new GoogleApiClient.Builder(this)
-                .enableAutoManage(this, this)
-                .addApi(Auth.GOOGLE_SIGN_IN_API, googleSignInOptions)
-                .build();
-
-
-        myGoogleGameApiClient = new GoogleApiClient.Builder(this)
+        myGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
                 .addApi(Games.API).addScope(Games.SCOPE_GAMES)
                 .build();
 
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.GET_ACCOUNTS)
+                != PackageManager.PERMISSION_GRANTED) {
 
-        silentSignIn();
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.GET_ACCOUNTS)) {
+                Log.d(TAG, "dont show request?");
+            } else {
+
+                Log.d(TAG, "permission: " + MY_PERMISSION_ACCESS_ACC_NAME);
+
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.GET_ACCOUNTS}, MY_PERMISSION_ACCESS_ACC_NAME);
+
+                Log.d(TAG, "permission: " + MY_PERMISSION_ACCESS_ACC_NAME);
+            }
+        } else {
+            Log.d(TAG, " permission granted");
+        }
+
         setUpTimer();
     }
 
@@ -108,53 +114,16 @@ public class MainActivity extends AppCompatActivity implements
      */
     @Override
     protected void onStart() {
-        super.onStart();
+
+        if (myGoogleApiClient != null && !myGoogleApiClient.isConnected())
+            myGoogleApiClient.connect();
 
         if (!myMainMenuFragment.isAdded() && !in_game) {
             getSupportFragmentManager().beginTransaction().add(R.id.fragment_container,
                     myMainMenuFragment).commit();
         }
-    }
 
-    /**Silently sign in user.*/
-    private void silentSignIn() {
-        OptionalPendingResult<GoogleSignInResult> pendingResult =
-                Auth.GoogleSignInApi.silentSignIn(myGoogleSignInApiClient);
-
-        if (pendingResult.isDone()) {
-            GoogleSignInResult result = pendingResult.get();
-            handleSignInResult(result);
-        } else {
-            pendingResult.setResultCallback(new ResultCallback<GoogleSignInResult>() {
-                @Override
-                public void onResult(@NonNull GoogleSignInResult result) {
-                    handleSignInResult(result);
-                }
-            });
-        }
-    }
-
-    /**
-     * Grab the user's info if they signed in successfully.
-     * Tell the user sign in failure.
-     */
-    private boolean handleSignInResult(GoogleSignInResult result) {
-        if (result.isSuccess()) {
-            Log.d("MathJumble", "Mainactivity signIn(): successfully signed in user");
-            editor.putString("signed in", "true");
-            editor.apply();
-
-            final GoogleSignInAccount acct = result.getSignInAccount();
-
-            my_name = acct.getDisplayName();
-            my_img_url = acct.getPhotoUrl().toString();
-            myGoogleGameApiClient.connect();
-            
-            if (myMainMenuFragment.isAdded()) myMainMenuFragment.displaySignedIn(true);
-            return true;
-        } else {
-           return false;
-        }
+        super.onStart();
     }
 
     /**
@@ -162,7 +131,7 @@ public class MainActivity extends AppCompatActivity implements
      * Check if the user has run out of time.
      */
     private void setUpTimer() {
-        my_timer = new CountDownTimer(THIRTY_SIX_HOURS, ONE_TENTH_SECOND) {
+        my_timer = new CountDownTimer(MAX_GAME_LENGTH, ONE_TENTH_SECOND) {
             @Override
             public void onTick(long millisUntilFinished) {
                 tick++;
@@ -193,87 +162,53 @@ public class MainActivity extends AppCompatActivity implements
         super.onStop();
     }
 
-    /**
-     * If app is interrupted, pause game
-     */
+    /**If app is interrupted, pause game*/
     @Override
     public void onPause() {
         pause();
         super.onPause();
     }
 
-    @Override
-    public void onResume() {
-        if (!game_is_going) resume();
-        super.onResume();
-    }
-
     public boolean signedIn() {
-        return (prefs.getString("signed in", "").equals("true"));
+        return (myGoogleApiClient != null && myGoogleApiClient.isConnected());
     }
-
-    public String getName() {return my_name;}
-    public String getImgUrl() {return my_img_url;}
 
     /**Sign out the user.*/
     public void signOut() {
+        Log.d(TAG, "Sign-out button clicked");
 
-        Auth.GoogleSignInApi.signOut(myGoogleSignInApiClient).setResultCallback(new ResultCallback<Status>() {
-            @Override
-            public void onResult(@NonNull Status status) {
-                myMainMenuFragment.signOut();
-                Toast.makeText(MainActivity.this, "Warning scores will not be saved when signed out!", Toast.LENGTH_LONG).show();
-                editor.putString("signed in", "false");
-                editor.apply();
-                myGoogleGameApiClient.disconnect();
-            }
-        });
-    }
+        Games.signOut(myGoogleApiClient);
+        myGoogleApiClient.disconnect();
+        my_name = "";
+        Toast.makeText(MainActivity.this, "Warning scores will not be saved when signed out!", Toast.LENGTH_LONG).show();
 
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.e("MathJumble", "onConnectionFailed() called, result: " + connectionResult);
+        myMainMenuFragment.signOut();
     }
 
     /**Sign in the user.*/
     public void signIn() {
-        final Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(myGoogleSignInApiClient);
-        startActivityForResult(signInIntent, RC_SIGN_IN);
+        Log.d(TAG, "Sign-in button clicked");
+        mySignInClicked = true;
+        myGoogleApiClient.connect();
     }
 
     /**
      * Display the leaderboards to the user.
      */
     public void displayLeaderboards() {
-        Log.d("MathJumble", prefs.getString("signed in", ""));
-        if (signedIn()) {
-            final Intent leaderboard_intent = Games.Leaderboards.getAllLeaderboardsIntent(myGoogleGameApiClient);
+        Log.d(TAG, "display leaderboards api is connected: " + myGoogleApiClient.isConnected());
+
+        if (!signedIn()) {
+            Toast.makeText(this, R.string.leaderboards_not_available, Toast.LENGTH_SHORT).show();
+        } else if(myGoogleApiClient.isConnected()) {
+            final Intent leaderboard_intent = Games.Leaderboards.getAllLeaderboardsIntent(myGoogleApiClient);
             startActivityForResult(leaderboard_intent, RC_SCOREBOARD);
         } else {
-            Toast.makeText(this, R.string.leaderboards_not_available, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Unable to display leaderboards", Toast.LENGTH_SHORT).show();
         }
     }
 
-    /**
-     * Handle the user attempting to sign in.
-     * @param requestCode of activity
-     * @param resultCode of activity
-     * @param intent of activity
-     */
-    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
-
-        if (requestCode == RC_SIGN_IN) { //attempting to sign in
-            final GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(intent);
-            boolean success = handleSignInResult(result);
-            if (!success) {
-                Log.d("MathJumble", "Mainactivity signIn(): unable to sign in user");
-
-                Toast.makeText(this, R.string.signin_failure, Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-
+    /**Set the leaderboard ID when difficulty is changed.*/
     private void setLeaderboardID(final String the_difficulty) {
         switch (the_difficulty) {
             case "Normal":
@@ -286,6 +221,7 @@ public class MainActivity extends AppCompatActivity implements
                 my_leaderboard_id = EASY_LEADERBOARD_ID;
                 break;
             default:
+                Log.e(TAG, "string difficulty error");
                 break;
         }
     }
@@ -313,7 +249,7 @@ public class MainActivity extends AppCompatActivity implements
      * Create the next problem to be solved and display it on the screen.
      */
     public void nextProblem() {
-        Log.d("MathJumble", "next problem");
+        Log.d(TAG, "next problem");
         my_jumble.nextProblem();
         final int[] variables = my_jumble.getVariables();
         final Iterator iterator = my_jumble.getAnswers().iterator();
@@ -363,9 +299,9 @@ public class MainActivity extends AppCompatActivity implements
     private void submitScore() {
         //submit the score otherwise store locally
         if (signedIn()) {
-            Games.Leaderboards.submitScore(myGoogleGameApiClient, my_leaderboard_id,  my_jumble.getScore());
+            Games.Leaderboards.submitScore(myGoogleApiClient, my_leaderboard_id,  my_jumble.getScore());
         } else {
-            Log.d("MathJumble", "unable to submit score");
+            Log.d(TAG, "unable to submit score");
         }
     }
 
@@ -404,9 +340,15 @@ public class MainActivity extends AppCompatActivity implements
         this.in_game = in_game;
     }
 
+    @Override
+    public String getName() {
+        return my_name;
+    }
+
     /*** Pause the game.*/
     public void pause() {
         if (in_game) {
+            myGameplayFragment.pause();
             game_is_going = false;
         }
     }
@@ -430,5 +372,72 @@ public class MainActivity extends AppCompatActivity implements
     private void switchToFragment(final Fragment newFrag) {
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, newFrag)
                 .commit();
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        Log.d(TAG, "onConnected() called. Sign in successful!");
+
+        final int permissionCheck = ContextCompat.checkSelfPermission(this,
+                Manifest.permission.GET_ACCOUNTS);
+
+        if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "On connected name accessed");
+            my_name = Games.getCurrentAccountName(myGoogleApiClient);
+        } else {
+            Log.d(TAG, "On connected name permission denied");
+            my_name = "";
+        }
+
+        if (myMainMenuFragment.isAdded()) myMainMenuFragment.displaySignedIn(true);
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        Log.d(TAG, "onConnectionSuspended() called. Trying to reconnect.");
+        myGoogleApiClient.connect();
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        Log.d(TAG, "onConnectionFailed() called, result: " + connectionResult);
+        Log.e(TAG, "onConnectionFailed() called, result: " + connectionResult);
+
+        if (myResolvingConnectionFailure) {
+            Log.d(TAG, "onConnectionFailed() ignoring connection failure; already resolving.");
+            return;
+        }
+
+        if (mySignInClicked || myAutoStartSignInFlow) {
+            myAutoStartSignInFlow = false;
+            mySignInClicked = false;
+            myResolvingConnectionFailure = BaseGameUtils.resolveConnectionFailure(this, myGoogleApiClient,
+                    connectionResult, RC_SIGN_IN, getString(R.string.signin_other_error));
+        }
+    }
+
+    /**
+     * Handle the user attempting to sign in.
+     * @param requestCode of activity
+     * @param resultCode of activity
+     * @param intent of activity
+     */
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        super.onActivityResult(requestCode, resultCode, intent);
+
+        if (requestCode == RC_SIGN_IN) { //attempting to sign in
+            Log.d(TAG, "onActivityResult with requestCode == RC_SIGN_IN, resultCode="
+                    + resultCode + ", intent=" + intent);
+
+            mySignInClicked = false;
+            myResolvingConnectionFailure = false;
+
+            if (resultCode == RESULT_OK) {
+                myGoogleApiClient.connect();
+            } else {
+                BaseGameUtils.showActivityResultError(this, requestCode, resultCode, R.string.signin_other_error);
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, intent);
     }
 }

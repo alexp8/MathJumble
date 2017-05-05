@@ -27,10 +27,9 @@ public class GameplayFragment extends Fragment {
 
     private int[] buttons;
     private int[] textviews;
-    private String my_time = "";
     private Button my_last_button;
 
-    public interface Listener {
+    interface Listener {
         void answerButtonClick(String value);
         void playAgain();
         void menu();
@@ -91,7 +90,7 @@ public class GameplayFragment extends Fragment {
 
     /**
      * Helper method that displays game over screen on game over.
-     * @param game_over visible or invisible
+     * @param game_over true or false if game is over
      */
     public void gameOver(final boolean game_over) {
         final RelativeLayout gameOverLayout = (RelativeLayout) myActivity.findViewById(R.id.game_over_layout);
@@ -169,27 +168,45 @@ public class GameplayFragment extends Fragment {
     /**
      * Swap views depending if game is ending or beginning a new game.
      * @param value value to set opacity of background (faded or full)
-     * @param game_active set buttons enabled if  game is playing
+     * @param game_active true if game is active
      */
     public void flipActiveViews(float value, boolean game_active) {
 
-        for (int i = 0; i < 4; i++) { //enable/disable pause and answer buttons
-            Button button = (Button) myActivity.findViewById(buttons[i]);
+        //enable/disable pause and answer buttons
+        for (int i = 0; i < 4; i++) {
+            final Button button = (Button) myActivity.findViewById(buttons[i]);
             button.setEnabled(game_active);
             button.setAlpha(value);
         }
 
+        //fade textviews if paused or game over
         for (int tv : textviews) {
             TextView textview = (TextView) myActivity.findViewById(tv);
             textview.setAlpha(value);
         }
 
-        myActivity.findViewById(R.id.pause_button).setAlpha((float) value);
-        myActivity.findViewById(R.id.operation_textview).setAlpha((float) value);
-        myActivity.findViewById(R.id.score_textview).setAlpha((float) value);
-        myActivity.findViewById(R.id.score_textview_label).setAlpha((float) value);
-        myActivity.findViewById(R.id.timer_textview).setAlpha((float) value);
-        myActivity.findViewById(R.id.timer_textview_label).setAlpha((float) value);
+        myActivity.findViewById(R.id.pause_button).setAlpha(value);
+        myActivity.findViewById(R.id.operation_textview).setAlpha(value);
+        myActivity.findViewById(R.id.score_textview).setAlpha(value);
+        myActivity.findViewById(R.id.score_textview_label).setAlpha(value);
+        myActivity.findViewById(R.id.timer_textview).setAlpha(value);
+        myActivity.findViewById(R.id.timer_textview_label).setAlpha(value);
+    }
+
+    /**MainActivity calls this if user paused via pausing app or if user hits pause in game.*/
+    public void pause() {
+        flipActiveViews(TRANSPARENT, false);
+
+        myActivity.findViewById(R.id.pause_button).setVisibility(View.GONE);
+        myActivity.findViewById(R.id.pause_screen_layout).setVisibility(View.VISIBLE);
+    }
+
+    private void resume() {
+        flipActiveViews(FULL, true);
+
+        myActivity.findViewById(R.id.pause_button).setVisibility(View.VISIBLE);
+        myActivity.findViewById(R.id.pause_button).setEnabled(true);
+        myActivity.findViewById(R.id.pause_screen_layout).setVisibility(View.GONE);
     }
 
     /**
@@ -228,13 +245,11 @@ public class GameplayFragment extends Fragment {
                     break;
                 case R.id.pause_button:
                     my_listener.pause();
-                    flipActiveViews(TRANSPARENT, false);
-                    myActivity.findViewById(R.id.pause_screen_layout).setVisibility(View.VISIBLE);
+                    pause();
                     break;
                 case R.id.resume_button:
                     my_listener.resume();
-                    flipActiveViews(1, true);
-                    myActivity.findViewById(R.id.pause_screen_layout).setVisibility(View.GONE);
+                    resume();
                     break;
                 default:
                     break;
