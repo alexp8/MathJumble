@@ -1,15 +1,10 @@
 package alexp8.controller;
 
-import android.Manifest;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.os.CountDownTimer;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -35,16 +30,10 @@ public class MainActivity extends AppCompatActivity implements
 
     private static final String EASY_LEADERBOARD_ID = "CgkIpYejmpQaEAIQAg",
             NORMAL_LEADERBOARD_ID ="CgkIpYejmpQaEAIQAw",
-            HARD_LEADERBOARD_ID = "CgkIpYejmpQaEAIQBA";
-
+            HARD_LEADERBOARD_ID = "CgkIpYejmpQaEAIQBA",
+            TAG = "MathJumble";
     private static final long MAX_GAME_LENGTH = 1000 * 60 * 60 * 36; //36 hours
-    private static final String MY_PREFS_NAME = "Math Jumble Preferences";
-    private static final String TAG = "MathJumble";
-    private static final int ACCESS_DENIED = 888, ACCESS_GRANTED = 889;
-    private static final int MY_PERMISSION_ACCESS_ACC_NAME = ACCESS_DENIED;
-    private GoogleApiClient myGoogleApiClient;
-    private static int RC_SIGN_IN = 9001;
-    private static int RC_SCOREBOARD = 5001;
+    private static final int RC_SIGN_IN = 9001, RC_SCOREBOARD = 5001;
 
     private GameplayFragment myGameplayFragment;
     private MainMenuFragment myMainMenuFragment;
@@ -53,20 +42,15 @@ public class MainActivity extends AppCompatActivity implements
     private static final long START_TIME = 20 * 1000;
     private static final int ONE_TENTH_SECOND = 100;
 
-    private long my_time;
-    private String my_difficulty = "", my_leaderboard_id, my_name, my_img_url;
+    private long my_time, tick = 0;
+    private String my_difficulty = "", my_leaderboard_id;
 
-    /**
-     *  in_game = true for when a user is on game screen,
-     *  in_game can be true while game_is_going false.
-     *  game_is_going = false if user lost or hit pause
-     */
-    private boolean in_game = false, game_is_going = false;
+    private boolean in_game = false, game_is_going = false,
+            mySignInClicked = false, myResolvingConnectionFailure = false, myAutoStartSignInFlow = true;
 
+    private GoogleApiClient myGoogleApiClient;
     private MathJumble my_jumble;
     private CountDownTimer my_timer;
-    private int tick = 0;
-    private boolean mySignInClicked = false, myResolvingConnectionFailure = false, myAutoStartSignInFlow = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,26 +69,6 @@ public class MainActivity extends AppCompatActivity implements
                 .addOnConnectionFailedListener(this)
                 .addApi(Games.API).addScope(Games.SCOPE_GAMES)
                 .build();
-
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.GET_ACCOUNTS)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.GET_ACCOUNTS)) {
-                Log.d(TAG, "dont show request?");
-            } else {
-
-                Log.d(TAG, "permission: " + MY_PERMISSION_ACCESS_ACC_NAME);
-
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.GET_ACCOUNTS}, MY_PERMISSION_ACCESS_ACC_NAME);
-
-                Log.d(TAG, "permission: " + MY_PERMISSION_ACCESS_ACC_NAME);
-            }
-        } else {
-            Log.d(TAG, " permission granted");
-        }
 
         setUpTimer();
     }
@@ -179,7 +143,6 @@ public class MainActivity extends AppCompatActivity implements
 
         Games.signOut(myGoogleApiClient);
         myGoogleApiClient.disconnect();
-        my_name = "";
         Toast.makeText(MainActivity.this, "Warning scores will not be saved when signed out!", Toast.LENGTH_LONG).show();
 
         myMainMenuFragment.signOut();
@@ -340,11 +303,6 @@ public class MainActivity extends AppCompatActivity implements
         this.in_game = in_game;
     }
 
-    @Override
-    public String getName() {
-        return my_name;
-    }
-
     /*** Pause the game.*/
     public void pause() {
         if (in_game) {
@@ -378,17 +336,6 @@ public class MainActivity extends AppCompatActivity implements
     public void onConnected(@Nullable Bundle bundle) {
         Log.d(TAG, "onConnected() called. Sign in successful!");
 
-        final int permissionCheck = ContextCompat.checkSelfPermission(this,
-                Manifest.permission.GET_ACCOUNTS);
-
-        if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "On connected name accessed");
-            my_name = Games.getCurrentAccountName(myGoogleApiClient);
-        } else {
-            Log.d(TAG, "On connected name permission denied");
-            my_name = "";
-        }
-
         if (myMainMenuFragment.isAdded()) myMainMenuFragment.displaySignedIn(true);
     }
 
@@ -401,7 +348,6 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         Log.d(TAG, "onConnectionFailed() called, result: " + connectionResult);
-        Log.e(TAG, "onConnectionFailed() called, result: " + connectionResult);
 
         if (myResolvingConnectionFailure) {
             Log.d(TAG, "onConnectionFailed() ignoring connection failure; already resolving.");
@@ -438,6 +384,7 @@ public class MainActivity extends AppCompatActivity implements
                 BaseGameUtils.showActivityResultError(this, requestCode, resultCode, R.string.signin_other_error);
             }
         }
+
         super.onActivityResult(requestCode, resultCode, intent);
     }
 }

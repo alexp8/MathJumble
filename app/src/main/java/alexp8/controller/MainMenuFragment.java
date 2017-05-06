@@ -9,7 +9,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import com.example.alexp8.mathjumble.R;
 import com.google.android.gms.common.SignInButton;
@@ -35,7 +34,6 @@ public class MainMenuFragment extends Fragment {
         boolean signedIn();
         boolean inGame();
         void setInGame(boolean b);
-        String getName();
     }
 
     public void setListener(Listener listener) {
@@ -49,14 +47,12 @@ public class MainMenuFragment extends Fragment {
         final View v = inflater.inflate(R.layout.fragment_main_menu, container, false);
         final MenuListener my_click_listener = new MenuListener();
 
-
-
         button_ids = new int[] {
                 R.id.sign_in_button, R.id.play_button,
                 R.id.sign_out_button, R.id.scores_button,
                 R.id.easy_button, R.id.normal_button,
-                R.id.hard_button, R.id.how_to_play_button,
-                R.id.close_how_to_play
+                R.id.hard_button, R.id.settings,
+                R.id.how_to_play_button, R.id.close_how_to_play
         };
 
         for (int i : button_ids)
@@ -116,10 +112,6 @@ public class MainMenuFragment extends Fragment {
         signInButton.setColorScheme(SignInButton.COLOR_AUTO);
         final Button signOutButton= (Button) myActivity.findViewById(R.id.sign_out_button);
 
-        final TextView name = (TextView) myActivity.findViewById(R.id.user_name);
-        name.setText(my_listener.getName());
-        name.setVisibility(signedIn ? View.VISIBLE : View.GONE);
-
         signInButton.setVisibility(signedIn ? View.GONE : View.VISIBLE);
         signOutButton.setVisibility(signedIn ? View.VISIBLE : View.GONE);
     }
@@ -127,14 +119,14 @@ public class MainMenuFragment extends Fragment {
     /**Disable all other buttons while in how to play mode except close button.*/
     private void howToPlayDisableOtherButtons(boolean active) {
 
-        SignInButton sb = (SignInButton) myActivity.findViewById(R.id.sign_in_button);
+        final SignInButton sb = (SignInButton) myActivity.findViewById(R.id.sign_in_button);
         sb.setEnabled(active);
         sb.setAlpha(active ? FULL : TRANSPARENT);
 
         for (int i = 1; i < button_ids.length; i++) {
             Button b = (Button) myActivity.findViewById(button_ids[i]);
 
-            if (button_ids[i]!=R.id.close_how_to_play) {
+            if (button_ids[i] != R.id.close_how_to_play) {//disable other buttons except close
                 b.setEnabled(active);
                 sb.setAlpha(active ? FULL : TRANSPARENT);
             }
@@ -177,22 +169,34 @@ public class MainMenuFragment extends Fragment {
                 case R.id.hard_button:
                     my_listener.playGame(getString(R.string.hard_string));
                     break;
+                case R.id.settings:
+                    settings();
+                    break;
+                case R.id.close_settings:
+                    closeSettings();
+                    break;
                 default:
                     break;
             }
+        }
+
+        private void closeSettings() {
+            myActivity.findViewById(R.id.feedback_title_textview).setVisibility(View.GONE);
+        }
+
+        private void settings() {
+            myActivity.findViewById(R.id.feedback_title_textview).setVisibility(View.VISIBLE);
         }
 
         private void howToPlay() {
             howToPlayDisableOtherButtons(false);
             showDifficultyButtons(false);
             myActivity.findViewById(R.id.HowToPlayLayout).setVisibility(View.VISIBLE);
-            myActivity.findViewById(R.id.feedback_title_textview).setVisibility(View.VISIBLE);
         }
 
         private void closeHowToPlay() {
             howToPlayDisableOtherButtons(true);
             myActivity.findViewById(R.id.HowToPlayLayout).setVisibility(View.GONE);
-            myActivity.findViewById(R.id.feedback_title_textview).setVisibility(View.GONE);
         }
     }
 }
