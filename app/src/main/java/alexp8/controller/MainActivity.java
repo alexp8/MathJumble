@@ -26,7 +26,7 @@ import alexp8.model.MathJumble;
  */
 public class MainActivity extends AppCompatActivity implements
         GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks,
-        MainMenuFragment.Listener, GameplayFragment.Listener {
+        MainMenuFragment.Listener, GameplayFragment.Listener, HowToPlayFragment.Listener {
 
     private static final String EASY_LEADERBOARD_ID = "CgkIpYejmpQaEAIQAg",
             NORMAL_LEADERBOARD_ID ="CgkIpYejmpQaEAIQAw",
@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity implements
 
     private GameplayFragment myGameplayFragment;
     private MainMenuFragment myMainMenuFragment;
+    private HowToPlayFragment myHowToPlayFragment;
 
     //time in milliseconds for game to be played (20 seconds)
     private static final long START_TIME = 20 * 1000;
@@ -60,9 +61,11 @@ public class MainActivity extends AppCompatActivity implements
 
         myMainMenuFragment = new MainMenuFragment();
         myGameplayFragment = new GameplayFragment();
+        myHowToPlayFragment = new HowToPlayFragment();
 
         myMainMenuFragment.setListener(this);
         myGameplayFragment.setListener(this);
+        myHowToPlayFragment.setListener(this);
 
         myGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
@@ -303,7 +306,7 @@ public class MainActivity extends AppCompatActivity implements
         this.in_game = in_game;
     }
 
-    /*** Pause the game.*/
+    /** Pause the game.*/
     public void pause() {
         if (in_game) {
             myGameplayFragment.pause();
@@ -311,7 +314,7 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    /*** Resume the game.*/
+    /** Resume the game.*/
     public void resume() {
         if (in_game) {
             game_is_going = true;
@@ -321,6 +324,12 @@ public class MainActivity extends AppCompatActivity implements
 
     private void startTimer() {
         my_timer.start();
+    }
+
+
+    @Override
+    public void howToPlay() {
+        switchToFragment(myHowToPlayFragment);
     }
 
     /**
@@ -386,5 +395,10 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         super.onActivityResult(requestCode, resultCode, intent);
+    }
+
+    @Override
+    public void closeHowToPlay() {
+        switchToFragment(myMainMenuFragment);
     }
 }

@@ -1,0 +1,37 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="alexp8.controller.HowToPlayFragment">
+
+    <TextView
+        android:id="@+id/howToPlayTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/how_to_play_string"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"
+        android:textSize="30sp"/>
+
+    <ImageView
+        android:id="@+id/how_to_play_img"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/howToPlayTitle"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        android:src="@drawable/how_to_play"
+        android:layout_above="@+id/close_how_to_play"
+        android:contentDescription="@string/how_to_play_desc" />
+
+    <Button
+        android:id="@+id/close_how_to_play"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="10dp"
+        android:text="@string/close"
+        android:background="@drawable/light_yellow_bg"/>
+
+</RelativeLayout>

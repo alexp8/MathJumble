@@ -34,6 +34,7 @@ public class MainMenuFragment extends Fragment {
         boolean signedIn();
         boolean inGame();
         void setInGame(boolean b);
+        void howToPlay();
     }
 
     public void setListener(Listener listener) {
@@ -52,7 +53,7 @@ public class MainMenuFragment extends Fragment {
                 R.id.sign_out_button, R.id.scores_button,
                 R.id.easy_button, R.id.normal_button,
                 R.id.hard_button, R.id.settings,
-                R.id.how_to_play_button, R.id.close_how_to_play
+                R.id.how_to_play_button, R.id.close_settings
         };
 
         for (int i : button_ids)
@@ -65,7 +66,8 @@ public class MainMenuFragment extends Fragment {
     public void onStart() {
         super.onStart();
 
-        if (my_listener.inGame()) my_listener.setInGame(false);
+        if (my_listener.inGame())
+            my_listener.setInGame(false);
 
         if (my_listener.signedIn())
             displaySignedIn(true);
@@ -116,17 +118,17 @@ public class MainMenuFragment extends Fragment {
         signOutButton.setVisibility(signedIn ? View.VISIBLE : View.GONE);
     }
 
-    /**Disable all other buttons while in how to play mode except close button.*/
-    private void howToPlayDisableOtherButtons(boolean active) {
+    /**Disable all other buttons while in settings mode.*/
+    private void disableOtherButtons(boolean active) {
 
         final SignInButton sb = (SignInButton) myActivity.findViewById(R.id.sign_in_button);
         sb.setEnabled(active);
         sb.setAlpha(active ? FULL : TRANSPARENT);
 
         for (int i = 1; i < button_ids.length; i++) {
-            Button b = (Button) myActivity.findViewById(button_ids[i]);
+            final Button b = (Button) myActivity.findViewById(button_ids[i]);
 
-            if (button_ids[i] != R.id.close_how_to_play) {//disable other buttons except close
+            if (!(button_ids[i] == R.id.close_settings || button_ids[i] == R.id.sign_out_button)) {
                 b.setEnabled(active);
                 sb.setAlpha(active ? FULL : TRANSPARENT);
             }
@@ -149,9 +151,6 @@ public class MainMenuFragment extends Fragment {
                     break;
                 case R.id.how_to_play_button:
                     howToPlay();
-                    break;
-                case R.id.close_how_to_play:
-                    closeHowToPlay();
                     break;
                 case R.id.scores_button:
                     my_listener.displayLeaderboards();
@@ -181,22 +180,18 @@ public class MainMenuFragment extends Fragment {
         }
 
         private void closeSettings() {
-            myActivity.findViewById(R.id.feedback_title_textview).setVisibility(View.GONE);
+            disableOtherButtons(true);
+            myActivity.findViewById(R.id.settings_layout).setVisibility(View.GONE);
         }
 
         private void settings() {
-            myActivity.findViewById(R.id.feedback_title_textview).setVisibility(View.VISIBLE);
+            disableOtherButtons(false);
+            myActivity.findViewById(R.id.settings_layout).setVisibility(View.VISIBLE);
         }
 
         private void howToPlay() {
-            howToPlayDisableOtherButtons(false);
             showDifficultyButtons(false);
-            myActivity.findViewById(R.id.HowToPlayLayout).setVisibility(View.VISIBLE);
-        }
-
-        private void closeHowToPlay() {
-            howToPlayDisableOtherButtons(true);
-            myActivity.findViewById(R.id.HowToPlayLayout).setVisibility(View.GONE);
+            my_listener.howToPlay();
         }
     }
 }
