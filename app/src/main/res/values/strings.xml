@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">MathJumble</string>
+    <string name="app_name">MathStone</string>
     <string name="app_id">898777007013</string>
     <string name="play_string">Play</string>
     <string name="scores_string">Scores</string>
@@ -34,10 +34,7 @@
     <string name="feedback">Send Feedback to: mathjumblefeedback@gmail.com</string>
     <string name="cancel">Cancel</string>
     <string name="x">x</string>
-    <string name="app_title">Math Jumble</string>
+    <string name="app_title">MathStone</string>
     <string name="Equals">=</string>
     <string name="settings">Settings</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

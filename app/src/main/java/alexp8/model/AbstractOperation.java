@@ -7,7 +7,7 @@ import java.util.Set;
 /**
  * Created by Alex Peterson on 3/23/2017.
  */
-abstract class AbstractOperation implements Operation {
+public abstract class AbstractOperation implements Operation {
 
     private int my_answer = 0, my_unknown_index = 0, my_score_bonus,
             my_max_increase;

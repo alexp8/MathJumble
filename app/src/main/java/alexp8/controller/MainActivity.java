@@ -18,8 +18,15 @@ import com.example.alexp8.mathjumble.R;
 import com.google.example.games.basegameutils.BaseGameUtils;
 
 import java.util.Iterator;
+import java.util.Random;
+import java.util.Set;
 
-import alexp8.model.MathJumble;
+import alexp8.model.AbstractOperation;
+import alexp8.model.Add;
+import alexp8.model.Divide;
+import alexp8.model.Multiply;
+import alexp8.model.Operation;
+import alexp8.model.Subtract;
 
 /**
  * Main activity handling Google sign-in, fragment transitions, and run the game.
@@ -30,10 +37,11 @@ public class MainActivity extends AppCompatActivity implements
 
     private static final String EASY_LEADERBOARD_ID = "CgkIpYejmpQaEAIQAg",
             NORMAL_LEADERBOARD_ID ="CgkIpYejmpQaEAIQAw",
-            HARD_LEADERBOARD_ID = "CgkIpYejmpQaEAIQBA",
-            TAG = "MathJumble";
+            HARD_LEADERBOARD_ID = "CgkIpYejmpQaEAIQBA";
+    private static final String TAG = "MathStone";
     private static final long MAX_GAME_LENGTH = 1000 * 60 * 60 * 36; //36 hours
     private static final int RC_SIGN_IN = 9001, RC_SCOREBOARD = 5001;
+    private static final int TIMER_INCREASE = 1000;
 
     private GameplayFragment myGameplayFragment;
     private MainMenuFragment myMainMenuFragment;
@@ -50,8 +58,12 @@ public class MainActivity extends AppCompatActivity implements
             mySignInClicked = false, myResolvingConnectionFailure = false, myAutoStartSignInFlow = true;
 
     private GoogleApiClient myGoogleApiClient;
-    private MathJumble my_jumble;
     private CountDownTimer my_timer;
+
+    private Random rand = new Random();
+    private int my_score = 0;
+    private Operation my_operation;
+    private AbstractOperation my_add, my_subtract, my_multiply, my_divide;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +86,8 @@ public class MainActivity extends AppCompatActivity implements
                 .build();
 
         setUpTimer();
+        getSupportFragmentManager().beginTransaction().add(R.id.fragment_container,
+                myMainMenuFragment).commit();
     }
 
     /**
@@ -84,11 +98,6 @@ public class MainActivity extends AppCompatActivity implements
 
         if (myGoogleApiClient != null && !myGoogleApiClient.isConnected())
             myGoogleApiClient.connect();
-
-        if (!myMainMenuFragment.isAdded() && !in_game) {
-            getSupportFragmentManager().beginTransaction().add(R.id.fragment_container,
-                    myMainMenuFragment).commit();
-        }
 
         super.onStart();
     }
@@ -197,6 +206,11 @@ public class MainActivity extends AppCompatActivity implements
      * @param the_difficulty of game
      */
     public void playGame(final String the_difficulty) {
+        my_add = new Add(the_difficulty);
+        my_divide = new Divide(the_difficulty);
+        my_multiply = new Multiply(the_difficulty);
+        my_subtract = new Subtract(the_difficulty);
+
         my_time = START_TIME; //reset time
         game_is_going = true;
         startTimer();
@@ -206,8 +220,6 @@ public class MainActivity extends AppCompatActivity implements
             setLeaderboardID(the_difficulty);
         }
 
-        my_jumble = new MathJumble(my_difficulty);
-
         if (!myGameplayFragment.isAdded()) switchToFragment(myGameplayFragment);
     }
 
@@ -216,18 +228,39 @@ public class MainActivity extends AppCompatActivity implements
      */
     public void nextProblem() {
         Log.d(TAG, "next problem");
-        my_jumble.nextProblem();
-        final int[] variables = my_jumble.getVariables();
-        final Iterator iterator = my_jumble.getAnswers().iterator();
+        pickOperation();
+        final int[] variables = my_operation.getVariables();
+        final Iterator iterator = my_operation.getAnswers().iterator();
         final String[] answers = new String[3];
 
         answers[0] = String.valueOf(iterator.next());
         answers[1] = String.valueOf(iterator.next());
         answers[2]= String.valueOf(iterator.next());
 
-        myGameplayFragment.updateTextViews(variables, my_jumble.getOperationText(), my_jumble.getUnknownIndex(),
-                String.valueOf(my_jumble.getScore()), String.valueOf(my_time / 1000));
+        myGameplayFragment.updateTextViews(variables, my_operation.toString(), my_operation.getUnknownIndex(),
+                String.valueOf(my_score), String.valueOf(my_time / 1000));
         myGameplayFragment.updateButtons(answers);
+    }
+
+    /**Randomly decide which problem to be solved.*/
+    private void pickOperation() {
+
+        final int rand_operation = rand.nextInt(4);
+        switch (rand_operation) {
+            case 0:
+                my_operation = my_add;
+                break;
+            case 1:
+                my_operation = my_divide;
+                break;
+            case 2:
+                my_operation = my_subtract;
+                break;
+            default:
+                my_operation = my_multiply;
+                break;
+        }
+        my_operation.operate();
     }
 
     /**
@@ -239,11 +272,12 @@ public class MainActivity extends AppCompatActivity implements
         if (value == null || value.equals("")) return;
 
         final int answer = Integer.valueOf(value);
-        final boolean correct = my_jumble.answer(answer);
 
-        if (correct) {
+        if (my_operation.getAnswer() == answer) {
+            my_score += my_operation.getScoreBonus(); //increment score
+            my_operation.increaseRange(); //increase game difficulty creating bigger numbers
             nextProblem();
-            my_time += my_jumble.getTimerIncrease();
+            my_time += TIMER_INCREASE;
         } else {
             lose();
         }
@@ -258,14 +292,14 @@ public class MainActivity extends AppCompatActivity implements
 
         submitScore();
 
-        final String score = String.valueOf(my_jumble.getScore());
+        final String score = String.valueOf(my_score);
         myGameplayFragment.gameOver(score, true);
     }
 
     private void submitScore() {
         //submit the score otherwise store locally
         if (signedIn()) {
-            Games.Leaderboards.submitScore(myGoogleApiClient, my_leaderboard_id,  my_jumble.getScore());
+            Games.Leaderboards.submitScore(myGoogleApiClient, my_leaderboard_id,  my_score);
         } else {
             Log.d(TAG, "unable to submit score");
         }
