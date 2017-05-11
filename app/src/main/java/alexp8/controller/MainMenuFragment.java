@@ -9,8 +9,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
-import com.example.alexp8.mathjumble.R;
+import com.alexp8.mathstone.R;
 import com.google.android.gms.common.SignInButton;
 
 /**
@@ -25,6 +26,7 @@ public class MainMenuFragment extends Fragment {
     private Activity myActivity;
 
     private int[] button_ids;
+    private String my_name;
 
     interface Listener {
         void signOut();
@@ -35,6 +37,7 @@ public class MainMenuFragment extends Fragment {
         boolean inGame();
         void setInGame(boolean b);
         void howToPlay();
+        void displayAchievements();
     }
 
     public void setListener(Listener listener) {
@@ -53,7 +56,8 @@ public class MainMenuFragment extends Fragment {
                 R.id.sign_out_button, R.id.scores_button,
                 R.id.easy_button, R.id.normal_button,
                 R.id.hard_button, R.id.settings,
-                R.id.how_to_play_button, R.id.close_settings
+                R.id.achievements_button, R.id.how_to_play_button,
+                R.id.close_settings
         };
 
         for (int i : button_ids)
@@ -89,14 +93,15 @@ public class MainMenuFragment extends Fragment {
         super.onDetach();
     }
 
-    public void showDifficultyButtons(final boolean visible) {
+    public void showDifficultyButtons(final boolean show_difficulty_buttons) {
         final LinearLayout my_difficulty_buttons = (LinearLayout) myActivity.findViewById(R.id.difficulty_buttons_layout);
 
-        if (visible)
-            my_difficulty_buttons.setVisibility(View.VISIBLE);
-        else
-            my_difficulty_buttons.setVisibility(View.GONE);
+        myActivity.findViewById(R.id.play_button).setVisibility(show_difficulty_buttons ? View.GONE : View.VISIBLE);
+        my_difficulty_buttons.setVisibility(show_difficulty_buttons ? View.VISIBLE : View.GONE);
+    }
 
+    public void setName(final String the_name) {
+        my_name = the_name;
     }
 
     /** */
@@ -114,8 +119,12 @@ public class MainMenuFragment extends Fragment {
         signInButton.setColorScheme(SignInButton.COLOR_AUTO);
         final Button signOutButton= (Button) myActivity.findViewById(R.id.sign_out_button);
 
+        final TextView name = (TextView) myActivity.findViewById(R.id.user_name);
+        name.setText(my_name);
+        name.setVisibility(signedIn ? View.VISIBLE : View.GONE);
+
         signInButton.setVisibility(signedIn ? View.GONE : View.VISIBLE);
-        signOutButton.setVisibility(signedIn ? View.VISIBLE : View.GONE);
+        signOutButton.setEnabled(signedIn);
     }
 
     /**Disable all other buttons while in settings mode.*/
@@ -174,6 +183,9 @@ public class MainMenuFragment extends Fragment {
                 case R.id.close_settings:
                     closeSettings();
                     break;
+                case R.id.achievements_button:
+                    my_listener.displayAchievements();
+                    break;
                 default:
                     break;
             }
@@ -190,8 +202,8 @@ public class MainMenuFragment extends Fragment {
         }
 
         private void howToPlay() {
-            showDifficultyButtons(false);
             my_listener.howToPlay();
+            showDifficultyButtons(false);
         }
     }
 }

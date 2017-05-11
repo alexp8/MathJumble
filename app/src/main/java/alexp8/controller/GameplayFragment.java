@@ -13,7 +13,7 @@ import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.example.alexp8.mathjumble.R;
+import com.alexp8.mathstone.R;
 
 /**
  * Fragment handling the game UI.

@@ -14,12 +14,11 @@ import android.widget.Toast;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.games.Games;
-import com.example.alexp8.mathjumble.R;
+import com.alexp8.mathstone.R;
 import com.google.example.games.basegameutils.BaseGameUtils;
 
 import java.util.Iterator;
 import java.util.Random;
-import java.util.Set;
 
 import alexp8.model.AbstractOperation;
 import alexp8.model.Add;
@@ -35,13 +34,20 @@ public class MainActivity extends AppCompatActivity implements
         GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks,
         MainMenuFragment.Listener, GameplayFragment.Listener, HowToPlayFragment.Listener {
 
-    private static final String EASY_LEADERBOARD_ID = "CgkIpYejmpQaEAIQAg",
-            NORMAL_LEADERBOARD_ID ="CgkIpYejmpQaEAIQAw",
-            HARD_LEADERBOARD_ID = "CgkIpYejmpQaEAIQBA";
+    private static final String EASY_LEADERBOARD_ID = "CgkImIenmJ0cEAIQAQ",
+            NORMAL_LEADERBOARD_ID ="CgkImIenmJ0cEAIQAg",
+            HARD_LEADERBOARD_ID = "CgkImIenmJ0cEAIQAw";
+    private static final String EASY_ONE_THOUSAND_PTS_ACHIEVEMENT = "CgkImIenmJ0cEAIQBQ",
+            NORMAL_ONE_THOUSAND_PTS_ACHIEVEMENT = "CgkImIenmJ0cEAIQBg", HARD_ONE_THOUSAND_PTS_ACHIEVEMENT = "CgkImIenmJ0cEAIQBA";
+    private static final String ADDITION_ACHIEVEMENT = "CgkImIenmJ0cEAIQBw", MULTIPLICATION_ACHIEVEMENT = "CgkImIenmJ0cEAIQCQ",
+            SUBTRACTION_ACHIEVEMENT = "CgkImIenmJ0cEAIQCg", DIVISION_ACHIEVEMENT = "CgkImIenmJ0cEAIQCA";
+
+
     private static final String TAG = "MathStone";
     private static final long MAX_GAME_LENGTH = 1000 * 60 * 60 * 36; //36 hours
-    private static final int RC_SIGN_IN = 9001, RC_SCOREBOARD = 5001;
+    private static final int RC_SIGN_IN = 9001, RC_SCOREBOARD = 5001,  RC_ACHIEVEMENT = 5002;
     private static final int TIMER_INCREASE = 1000;
+
 
     private GameplayFragment myGameplayFragment;
     private MainMenuFragment myMainMenuFragment;
@@ -153,9 +159,10 @@ public class MainActivity extends AppCompatActivity implements
     public void signOut() {
         Log.d(TAG, "Sign-out button clicked");
 
+        myMainMenuFragment.setName("");
         Games.signOut(myGoogleApiClient);
         myGoogleApiClient.disconnect();
-        Toast.makeText(MainActivity.this, "Warning scores will not be saved when signed out!", Toast.LENGTH_LONG).show();
+        Toast.makeText(MainActivity.this, R.string.sign_out_warning, Toast.LENGTH_LONG).show();
 
         myMainMenuFragment.signOut();
     }
@@ -175,12 +182,22 @@ public class MainActivity extends AppCompatActivity implements
 
         if (!signedIn()) {
             Toast.makeText(this, R.string.leaderboards_not_available, Toast.LENGTH_SHORT).show();
-        } else if(myGoogleApiClient.isConnected()) {
+        } else {
             final Intent leaderboard_intent = Games.Leaderboards.getAllLeaderboardsIntent(myGoogleApiClient);
             startActivityForResult(leaderboard_intent, RC_SCOREBOARD);
-        } else {
-            Toast.makeText(this, "Unable to display leaderboards", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    public void displayAchievements() {
+        Log.d(TAG, "display achievements api is connected: " + myGoogleApiClient.isConnected());
+
+        if (!signedIn()) {
+            Toast.makeText(this, R.string.leaderboards_not_available, Toast.LENGTH_SHORT).show();
+        } else {
+            final Intent leaderboard_intent = Games.Achievements.getAchievementsIntent(myGoogleApiClient);
+            startActivityForResult(leaderboard_intent, RC_ACHIEVEMENT);
+        }
+
     }
 
     /**Set the leaderboard ID when difficulty is changed.*/
@@ -278,6 +295,22 @@ public class MainActivity extends AppCompatActivity implements
             my_operation.increaseRange(); //increase game difficulty creating bigger numbers
             nextProblem();
             my_time += TIMER_INCREASE;
+
+            final String operation = my_operation.toString();
+            switch(operation) {
+                case "+":
+                    Games.Achievements.increment(myGoogleApiClient, ADDITION_ACHIEVEMENT, 1);
+                    break;
+                case "-":
+                    Games.Achievements.increment(myGoogleApiClient, SUBTRACTION_ACHIEVEMENT, 1);
+                    break;
+                case "*":
+                    Games.Achievements.increment(myGoogleApiClient, MULTIPLICATION_ACHIEVEMENT, 1);
+                    break;
+                case "÷":
+                    Games.Achievements.increment(myGoogleApiClient, DIVISION_ACHIEVEMENT, 1);
+                    break;
+            }
         } else {
             lose();
         }
@@ -299,7 +332,16 @@ public class MainActivity extends AppCompatActivity implements
     private void submitScore() {
         //submit the score otherwise store locally
         if (signedIn()) {
+            Log.d(TAG, "score submitted");
             Games.Leaderboards.submitScore(myGoogleApiClient, my_leaderboard_id,  my_score);
+
+            if (my_score >= 1000 && my_difficulty.equals("Hard")) {
+                Games.Achievements.unlock(myGoogleApiClient, HARD_ONE_THOUSAND_PTS_ACHIEVEMENT);
+            } else if (my_score >= 1000 && my_difficulty.equals("Normal")) {
+                Games.Achievements.unlock(myGoogleApiClient, NORMAL_ONE_THOUSAND_PTS_ACHIEVEMENT);
+            } else if (my_score >= 1000 && my_difficulty.equals("Easy")) {
+                Games.Achievements.unlock(myGoogleApiClient, EASY_ONE_THOUSAND_PTS_ACHIEVEMENT);
+            }
         } else {
             Log.d(TAG, "unable to submit score");
         }
@@ -378,6 +420,11 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         Log.d(TAG, "onConnected() called. Sign in successful!");
+
+
+
+        final String name = Games.Players.getCurrentPlayer(myGoogleApiClient).getDisplayName();
+        myMainMenuFragment.setName(name);
 
         if (myMainMenuFragment.isAdded()) myMainMenuFragment.displaySignedIn(true);
     }
